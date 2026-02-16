@@ -22,7 +22,7 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use(express.json({ limit: '50mb' }));
 
 // Serve static files (works both locally and on Vercel)
-// This serves HTML, CSS, JS, images, etc. from the project root
+// This must come before API routes so static files are served first
 app.use(express.static(__dirname, {
   index: 'index.html',
   extensions: ['html']
@@ -266,11 +266,8 @@ app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), 
 
 app.use('/uploads', express.static(UPLOADS_DIR));
 
-// Serve index.html for root path (Vercel compatibility)
-// This should be after static middleware but before other routes
-app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// Note: Static file serving via express.static() above handles all static files including index.html
+// The root route '/' will be handled by express.static() automatically due to index: 'index.html'
 
 // Only start server if running directly (not imported as module)
 if (require.main === module) {
