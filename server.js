@@ -405,58 +405,93 @@ try {
   console.warn('Could not set up uploads directory:', err.message);
 }
 
-// Explicit root route handler (express.static should handle this, but be explicit)
-app.get('/', function (req, res) {
+// Helper function to serve HTML files
+function serveHtmlFile(filename, req, res) {
   try {
-    const indexPath = path.join(staticDir, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
+    const filePath = path.join(staticDir, filename);
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
       return;
     }
     
     // Try alternative paths
     const altPaths = [
-      path.join(__dirname, 'index.html'),
-      path.join(process.cwd(), 'index.html'),
-      path.join(__dirname, '..', 'index.html')
+      path.join(__dirname, filename),
+      path.join(process.cwd(), filename),
+      path.join(__dirname, '..', filename)
     ];
     
     for (const altPath of altPaths) {
       try {
         if (fs.existsSync(altPath)) {
-          console.log('Found index.html at alternative path:', altPath);
+          console.log(`Found ${filename} at alternative path:`, altPath);
           res.sendFile(altPath);
           return;
         }
       } catch (e) {
-        console.warn('Error checking alternative path:', altPath, e.message);
+        console.warn(`Error checking alternative path for ${filename}:`, altPath, e.message);
       }
     }
     
     // If not found, log details and return 404
-    console.error('index.html not found at any path');
-    console.error('Tried:', indexPath);
+    console.error(`${filename} not found at any path`);
+    console.error('Tried:', filePath);
     console.error('Alternative paths:', altPaths);
-    console.error('__dirname:', __dirname);
-    console.error('process.cwd():', process.cwd());
     console.error('staticDir:', staticDir);
     
-    // List files in staticDir for debugging
-    try {
-      const files = fs.readdirSync(staticDir);
-      console.error('Files in staticDir:', files.slice(0, 20));
-    } catch (e) {
-      console.error('Cannot read staticDir:', e.message);
-    }
-    
-    res.status(404).send('Not Found - index.html not found. Check function logs for details.');
+    res.status(404).send(`Not Found - ${filename} not found. Check function logs for details.`);
   } catch (err) {
-    console.error('Error serving index.html:', err);
+    console.error(`Error serving ${filename}:`, err);
     console.error('Error stack:', err.stack);
     if (!res.headersSent) {
       res.status(500).send('Server Error: ' + err.message);
     }
   }
+}
+
+// Explicit routes for HTML files
+app.get('/', function (req, res) {
+  serveHtmlFile('index.html', req, res);
+});
+
+app.get('/videos.html', function (req, res) {
+  serveHtmlFile('videos.html', req, res);
+});
+
+app.get('/customer-login.html', function (req, res) {
+  serveHtmlFile('customer-login.html', req, res);
+});
+
+app.get('/photos.html', function (req, res) {
+  serveHtmlFile('photos.html', req, res);
+});
+
+app.get('/contact.html', function (req, res) {
+  serveHtmlFile('contact.html', req, res);
+});
+
+app.get('/about.html', function (req, res) {
+  serveHtmlFile('about.html', req, res);
+});
+
+app.get('/faq.html', function (req, res) {
+  serveHtmlFile('faq.html', req, res);
+});
+
+app.get('/services.html', function (req, res) {
+  serveHtmlFile('services.html', req, res);
+});
+
+app.get('/admin.html', function (req, res) {
+  serveHtmlFile('admin.html', req, res);
+});
+
+app.get('/admin-customers.html', function (req, res) {
+  serveHtmlFile('admin-customers.html', req, res);
+});
+
+app.get('/customer-panel.html', function (req, res) {
+  serveHtmlFile('customer-panel.html', req, res);
 });
 
 // Note: Static file serving via express.static() above handles all static files including index.html
