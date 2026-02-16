@@ -21,10 +21,12 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '50mb' }));
 
-// Only serve static files when running locally (not on Vercel)
-if (require.main === module) {
-  app.use(express.static(__dirname));
-}
+// Serve static files (works both locally and on Vercel)
+// This serves HTML, CSS, JS, images, etc. from the project root
+app.use(express.static(__dirname, {
+  index: 'index.html',
+  extensions: ['html']
+}));
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'lorenz-session-secret',
@@ -70,24 +72,28 @@ app.post('/api/save-services', adminAuth, function (req, res) {
 });
 
 // ---------- Customer auth ----------
-app.post('/api/customer-login', function (req, res) {
-  const { username, password } = req.body || {};
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Kullanıcı adı ve şifre gerekli.' });
+app.post('/api/customer-login', async function (req, res) {
+  try {
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Kullanıcı adı ve şifre gerekli.' });
+    }
+    const customer = await db.getCustomerByUsername(username.trim());
+    if (!customer) {
+      return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
+    }
+    const match = bcrypt.compareSync(password, customer.password_hash);
+    if (!match) {
+      return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
+    }
+    req.session.customerId = customer.id;
+    req.session.save(function (err) {
+      if (err) return res.status(500).json({ error: 'Oturum açılamadı.' });
+      res.json({ ok: true, customer: { id: customer.id, username: customer.username, name: customer.name } });
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
   }
-  const customer = db.getCustomerByUsername(username.trim());
-  if (!customer) {
-    return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
-  }
-  const match = bcrypt.compareSync(password, customer.password_hash);
-  if (!match) {
-    return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
-  }
-  req.session.customerId = customer.id;
-  req.session.save(function (err) {
-    if (err) return res.status(500).json({ error: 'Oturum açılamadı.' });
-    res.json({ ok: true, customer: { id: customer.id, username: customer.username, name: customer.name } });
-  });
 });
 
 app.post('/api/customer-logout', function (req, res) {
@@ -96,104 +102,132 @@ app.post('/api/customer-logout', function (req, res) {
   });
 });
 
-app.get('/api/customer/me', customerAuth, function (req, res) {
-  const customer = db.getCustomerById(req.session.customerId);
-  if (!customer) return res.status(401).json({ error: 'Unauthorized' });
-  res.json(customer);
+app.get('/api/customer/me', customerAuth, async function (req, res) {
+  try {
+    const customer = await db.getCustomerById(req.session.customerId);
+    if (!customer) return res.status(401).json({ error: 'Unauthorized' });
+    res.json(customer);
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
+  }
 });
 
 // ---------- Customer album & selection ----------
-app.get('/api/customer/album', customerAuth, function (req, res) {
-  const album = db.getAlbumByCustomerId(req.session.customerId);
-  if (!album) {
-    return res.json({ album: null, photos: [], selectedIds: [], approvedAt: null });
-  }
-  const photos = db.getPhotosByAlbumId(album.id);
-  let selectedIds = [];
+app.get('/api/customer/album', customerAuth, async function (req, res) {
   try {
-    if (album.selected_photo_ids) selectedIds = JSON.parse(album.selected_photo_ids);
-  } catch (e) {}
-  const baseUrl = '/uploads/albums/' + album.id + '/';
-  const photosWithUrl = photos.map(function (p) {
-    return { id: p.id, url: baseUrl + (p.filename || path.basename(p.path)), filename: p.filename };
-  });
-  res.json({
-    album: { id: album.id, name: album.name, event_date: album.event_date },
-    photos: photosWithUrl,
-    selectedIds: selectedIds,
-    approvedAt: album.approved_at
-  });
+    const album = await db.getAlbumByCustomerId(req.session.customerId);
+    if (!album) {
+      return res.json({ album: null, photos: [], selectedIds: [], approvedAt: null });
+    }
+    const photos = await db.getPhotosByAlbumId(album.id);
+    let selectedIds = [];
+    try {
+      if (album.selected_photo_ids) selectedIds = JSON.parse(album.selected_photo_ids);
+    } catch (e) {}
+    const baseUrl = '/uploads/albums/' + album.id + '/';
+    const photosWithUrl = photos.map(function (p) {
+      return { id: p.id, url: baseUrl + (p.filename || path.basename(p.path)), filename: p.filename };
+    });
+    res.json({
+      album: { id: album.id, name: album.name, event_date: album.event_date },
+      photos: photosWithUrl,
+      selectedIds: selectedIds,
+      approvedAt: album.approved_at
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
+  }
 });
 
-app.put('/api/customer/selection', customerAuth, function (req, res) {
-  const album = db.getAlbumByCustomerId(req.session.customerId);
-  if (!album) return res.status(404).json({ error: 'Albüm bulunamadı.' });
-  const photoIds = Array.isArray(req.body.photoIds) ? req.body.photoIds.map(Number) : [];
-  db.setAlbumSelection(album.id, photoIds);
-  res.json({ ok: true });
+app.put('/api/customer/selection', customerAuth, async function (req, res) {
+  try {
+    const album = await db.getAlbumByCustomerId(req.session.customerId);
+    if (!album) return res.status(404).json({ error: 'Albüm bulunamadı.' });
+    const photoIds = Array.isArray(req.body.photoIds) ? req.body.photoIds.map(Number) : [];
+    await db.setAlbumSelection(album.id, photoIds);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
+  }
 });
 
-app.post('/api/customer/approve', customerAuth, function (req, res) {
-  const album = db.getAlbumByCustomerId(req.session.customerId);
-  if (!album) return res.status(404).json({ error: 'Albüm bulunamadı.' });
-  db.approveAlbum(album.id);
-  res.json({ ok: true });
+app.post('/api/customer/approve', customerAuth, async function (req, res) {
+  try {
+    const album = await db.getAlbumByCustomerId(req.session.customerId);
+    if (!album) return res.status(404).json({ error: 'Albüm bulunamadı.' });
+    await db.approveAlbum(album.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
+  }
 });
 
 // ---------- Admin: customers & albums ----------
-app.get('/api/admin/customers', adminAuth, function (req, res) {
-  const list = db.getAllCustomers();
-  res.json(list);
+app.get('/api/admin/customers', adminAuth, async function (req, res) {
+  try {
+    const list = await db.getAllCustomers();
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
+  }
 });
 
-app.post('/api/admin/customers', adminAuth, function (req, res) {
-  const { username, password, name } = req.body || {};
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Kullanıcı adı ve şifre gerekli.' });
-  }
-  const hash = bcrypt.hashSync(password.trim(), 10);
+app.post('/api/admin/customers', adminAuth, async function (req, res) {
   try {
-    const id = db.createCustomer(username.trim(), hash, (name || '').trim());
+    const { username, password, name } = req.body || {};
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Kullanıcı adı ve şifre gerekli.' });
+    }
+    const hash = bcrypt.hashSync(password.trim(), 10);
+    const id = await db.createCustomer(username.trim(), hash, (name || '').trim());
     res.json({ ok: true, id });
   } catch (e) {
-    if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+    if (e.code === 'SQLITE_CONSTRAINT_UNIQUE' || e.code === '23505') {
       return res.status(400).json({ error: 'Bu kullanıcı adı zaten kullanılıyor.' });
     }
-    throw e;
+    res.status(400).json({ error: e.message || 'Hata oluştu.' });
   }
 });
 
-app.post('/api/admin/albums', adminAuth, function (req, res) {
-  const { customer_id, name, event_date } = req.body || {};
-  if (!customer_id) return res.status(400).json({ error: 'customer_id gerekli.' });
+app.post('/api/admin/albums', adminAuth, async function (req, res) {
   try {
-    const id = db.createAlbum(Number(customer_id), (name || '').trim(), (event_date || '').trim());
+    const { customer_id, name, event_date } = req.body || {};
+    if (!customer_id) return res.status(400).json({ error: 'customer_id gerekli.' });
+    const id = await db.createAlbum(Number(customer_id), (name || '').trim(), (event_date || '').trim());
     res.json({ ok: true, id });
   } catch (e) {
-    res.status(400).json({ error: e.message });
+    res.status(400).json({ error: e.message || 'Hata oluştu.' });
   }
 });
 
-app.get('/api/admin/albums', adminAuth, function (req, res) {
-  const customerId = req.query.customer_id;
-  if (!customerId) return res.status(400).json({ error: 'customer_id gerekli.' });
-  const list = db.getAlbumsByCustomerId(Number(customerId));
-  res.json(list);
+app.get('/api/admin/albums', adminAuth, async function (req, res) {
+  try {
+    const customerId = req.query.customer_id;
+    if (!customerId) return res.status(400).json({ error: 'customer_id gerekli.' });
+    const list = await db.getAlbumsByCustomerId(Number(customerId));
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
+  }
 });
 
-app.get('/api/admin/albums/:id', adminAuth, function (req, res) {
-  const album = db.getAlbumById(Number(req.params.id));
-  if (!album) return res.status(404).json({ error: 'Albüm bulunamadı.' });
-  const photos = db.getPhotosByAlbumId(album.id);
-  let selectedIds = [];
+app.get('/api/admin/albums/:id', adminAuth, async function (req, res) {
   try {
-    if (album.selected_photo_ids) selectedIds = JSON.parse(album.selected_photo_ids);
-  } catch (e) {}
-  const baseUrl = '/uploads/albums/' + album.id + '/';
-  const photosWithUrl = photos.map(function (p) {
-    return { id: p.id, url: baseUrl + (p.filename || path.basename(p.path)), filename: p.filename, selected: selectedIds.indexOf(p.id) !== -1 };
-  });
-  res.json({ album, photos: photosWithUrl, selectedIds, approvedAt: album.approved_at });
+    const album = await db.getAlbumById(Number(req.params.id));
+    if (!album) return res.status(404).json({ error: 'Albüm bulunamadı.' });
+    const photos = await db.getPhotosByAlbumId(album.id);
+    let selectedIds = [];
+    try {
+      if (album.selected_photo_ids) selectedIds = JSON.parse(album.selected_photo_ids);
+    } catch (e) {}
+    const baseUrl = '/uploads/albums/' + album.id + '/';
+    const photosWithUrl = photos.map(function (p) {
+      return { id: p.id, url: baseUrl + (p.filename || path.basename(p.path)), filename: p.filename, selected: selectedIds.indexOf(p.id) !== -1 };
+    });
+    res.json({ album, photos: photosWithUrl, selectedIds, approvedAt: album.approved_at });
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
+  }
 });
 
 const albumUploadDir = path.join(UPLOADS_DIR, 'albums');
@@ -213,27 +247,46 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), function (req, res) {
-  const albumId = Number(req.params.id);
-  const album = db.getAlbumById(albumId);
-  if (!album) return res.status(404).json({ error: 'Albüm bulunamadı.' });
-  const files = req.files || [];
-  let order = db.getPhotosByAlbumId(albumId).length;
-  for (const f of files) {
-    db.addPhoto(albumId, f.path, f.filename, order++);
+app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), async function (req, res) {
+  try {
+    const albumId = Number(req.params.id);
+    const album = await db.getAlbumById(albumId);
+    if (!album) return res.status(404).json({ error: 'Albüm bulunamadı.' });
+    const files = req.files || [];
+    const existingPhotos = await db.getPhotosByAlbumId(albumId);
+    let order = existingPhotos.length;
+    for (const f of files) {
+      await db.addPhoto(albumId, f.path, f.filename, order++);
+    }
+    res.json({ ok: true, count: files.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Sunucu hatası.' });
   }
-  res.json({ ok: true, count: files.length });
 });
 
 app.use('/uploads', express.static(UPLOADS_DIR));
 
+// Serve index.html for root path (Vercel compatibility)
+// This should be after static middleware but before other routes
+app.get('/', function (req, res) {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 // Only start server if running directly (not imported as module)
 if (require.main === module) {
-  app.listen(PORT, function () {
+  app.listen(PORT, async function () {
     db.getDb();
+    if (db.initSchema) {
+      await db.initSchema();
+    }
     console.log('Lorenz Wedding – http://localhost:' + PORT);
     console.log('Admin: http://localhost:' + PORT + '/admin.html');
     console.log('Müşteri girişi: http://localhost:' + PORT + '/customer-login.html');
+    if (process.env.SUPABASE_URL) {
+      console.log('✓ Using Supabase database');
+    } else {
+      console.log('✓ Using SQLite database (local)');
+    }
   });
 }
 

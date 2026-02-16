@@ -4,10 +4,28 @@ Wedding and special occasions photography website.
 
 ## Local Development
 
+### Option 1: Using SQLite (Default, No Setup Required)
+
 ```bash
 npm install
 npm start
 ```
+
+The app will use SQLite (`data/customers.db`) automatically when `SUPABASE_URL` is not set.
+
+### Option 2: Using Supabase (Recommended for Production)
+
+1. Set up Supabase (see `SUPABASE_SETUP.md`)
+2. Create a `.env` file:
+   ```env
+   SUPABASE_URL=https://xxxxx.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   ```
+3. Run:
+   ```bash
+   npm install
+   npm start
+   ```
 
 Visit:
 - Home: http://localhost:3000
@@ -46,28 +64,35 @@ Visit:
 
 Set these in Vercel dashboard (Settings → Environment Variables):
 
+**Required for Supabase:**
+- `SUPABASE_URL` - Your Supabase project URL (e.g., `https://xxxxx.supabase.co`)
+- `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key (from Supabase dashboard → Settings → API)
+
+**Optional:**
 - `ADMIN_SECRET` - Secret key for admin API (optional, defaults to 'lorenz-admin-secret-change-me')
 - `SESSION_SECRET` - Secret for session encryption (optional, defaults to 'lorenz-session-secret')
 
+### Database Setup
+
+**For Production (Vercel):** Use Supabase (PostgreSQL). See `SUPABASE_SETUP.md` for detailed setup instructions.
+
+The app automatically uses:
+- **Supabase** when `SUPABASE_URL` is set (production/Vercel)
+- **SQLite** when `SUPABASE_URL` is not set (local development)
+
 ### Important Notes for Vercel
 
-⚠️ **Limitations:**
-- **SQLite Database**: The SQLite database file (`data/customers.db`) is ephemeral on Vercel serverless functions. Data will reset on each deployment or after inactivity. For production, consider migrating to:
-  - Vercel Postgres
-  - PlanetScale
-  - Supabase
-  - Or another persistent database service
+⚠️ **File Uploads**: Uploaded photos in `uploads/` directory are ephemeral on Vercel. Consider using:
+- Vercel Blob Storage
+- Cloudinary
+- AWS S3
+- Supabase Storage
+- Or another cloud storage service
 
-- **File Uploads**: Uploaded photos in `uploads/` directory are also ephemeral. Consider using:
-  - Vercel Blob Storage
-  - Cloudinary
-  - AWS S3
-  - Or another cloud storage service
-
-- **Sessions**: Current session storage uses file-based sessions which won't persist on Vercel. Consider:
-  - Redis (via Upstash)
-  - Database-backed sessions
-  - JWT tokens
+⚠️ **Sessions**: Current session storage uses file-based sessions which won't persist on Vercel. Consider:
+- Redis (via Upstash)
+- Database-backed sessions
+- JWT tokens
 
 ### Current Admin Credentials
 
@@ -77,15 +102,20 @@ Set these in Vercel dashboard (Settings → Environment Variables):
 ## Project Structure
 
 ```
-├── api/              # Vercel serverless function
-├── assets/           # Images and media
-├── css/              # Stylesheets
-├── data/             # JSON data files (gallery, videos, etc.)
-├── js/               # JavaScript files
-├── uploads/          # Customer photo uploads (local only)
-├── admin.html        # Admin panel
+├── api/                  # Vercel serverless function
+├── assets/               # Images and media
+├── css/                  # Stylesheets
+├── data/                 # JSON data files (gallery, videos, etc.)
+├── js/                   # JavaScript files
+├── uploads/              # Customer photo uploads (local only)
+├── admin.html            # Admin panel
 ├── customer-login.html
 ├── customer-panel.html
-├── server.js         # Express server
-└── vercel.json       # Vercel configuration
+├── db.js                 # Database adapter (auto-selects SQLite or Supabase)
+├── db-sqlite.js          # SQLite implementation (local dev)
+├── db-supabase.js        # Supabase implementation (production)
+├── supabase-migration.sql # Database schema for Supabase
+├── server.js             # Express server
+├── SUPABASE_SETUP.md     # Supabase setup guide
+└── vercel.json           # Vercel configuration
 ```
