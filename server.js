@@ -89,11 +89,33 @@ try {
   }
 
   // Serve static files (works both locally and on Vercel)
+  // Serve CSS, JS, images, and other assets
   app.use(express.static(staticDir, {
     index: 'index.html',
-    extensions: ['html']
+    extensions: ['html'],
+    setHeaders: (res, path) => {
+      // Set proper content types
+      if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      }
+    }
   }));
   console.log('Static file middleware configured for:', staticDir);
+  
+  // Log available files for debugging
+  try {
+    const cssDir = path.join(staticDir, 'css');
+    if (fs.existsSync(cssDir)) {
+      const cssFiles = fs.readdirSync(cssDir);
+      console.log('CSS files found:', cssFiles);
+    } else {
+      console.warn('CSS directory not found at:', cssDir);
+    }
+  } catch (e) {
+    console.warn('Could not list CSS files:', e.message);
+  }
 } catch (error) {
   console.error('Error setting up static file serving:', error);
   console.error('Error stack:', error.stack);

@@ -2,7 +2,6 @@
   "version": 2,
   "buildCommand": "npm install",
   "installCommand": "npm install",
-  "outputDirectory": ".",
   "framework": null,
   "builds": [
     {
@@ -14,6 +13,17 @@
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.js"
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "api/index.js"
+    },
+    {
+      "handle": "filesystem"
+    },
     {
       "src": "/(.*)",
       "dest": "api/index.js"
