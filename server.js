@@ -305,15 +305,48 @@ app.get('/api/admin/albums/:id', adminAuth, async function (req, res) {
   }
 });
 
+// Multer storage configuration
+// On Vercel, file uploads won't work (read-only filesystem), but we'll configure it anyway
 const albumUploadDir = path.join(UPLOADS_DIR, 'albums');
-if (!fs.existsSync(albumUploadDir)) fs.mkdirSync(albumUploadDir, { recursive: true });
+
+// Only create directories locally (not on Vercel)
+if (!isVercelEnv) {
+  if (!fs.existsSync(albumUploadDir)) {
+    fs.mkdirSync(albumUploadDir, { recursive: true });
+  }
+}
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const albumId = req.params.id;
-    const dir = path.join(albumUploadDir, String(albumId));
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
+    // On Vercel, use /tmp directory (writable)
+    if (isVercelEnv) {
+      const tmpDir = '/tmp/uploads/albums';
+      if (!fs.existsSync(tmpDir)) {
+        try {
+          fs.mkdirSync(tmpDir, { recursive: true });
+        } catch (e) {
+          console.warn('Could not create tmp upload dir:', e.message);
+        }
+      }
+      const albumId = req.params.id;
+      const dir = path.join(tmpDir, String(albumId));
+      if (!fs.existsSync(dir)) {
+        try {
+          fs.mkdirSync(dir, { recursive: true });
+        } catch (e) {
+          console.warn('Could not create album dir:', e.message);
+        }
+      }
+      cb(null, dir);
+    } else {
+      // Local development
+      const albumId = req.params.id;
+      const dir = path.join(albumUploadDir, String(albumId));
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      cb(null, dir);
+    }
   },
   filename: function (req, file, cb) {
     const safe = (file.originalname || 'photo').replace(/[^a-zA-Z0-9._-]/g, '_');
