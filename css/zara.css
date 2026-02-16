@@ -1,0 +1,407 @@
+/**
+ * Zara-style layout – exact structure
+ */
+
+/* Zara body – hide old header if present */
+body.zara-body .header {
+  display: none !important;
+}
+
+/* Zara typography / logo */
+.zara-logo {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-black);
+  text-decoration: none;
+}
+
+.zara-logo__img {
+  display: none;
+}
+
+.zara-logo__text {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  display: block;
+}
+
+/* Top bar – Zara thin header */
+.zara-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 1.25rem 2rem;
+  background: var(--color-white);
+  border-bottom: none;
+}
+
+.zara-header__left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.zara-header__center {
+  justify-self: center;
+}
+
+.zara-header__right {
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.zara-menu-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-black);
+}
+
+.zara-menu-btn span {
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: currentColor;
+}
+
+.zara-side-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+.zara-side-label--left {
+  text-align: left;
+}
+
+.zara-side-label--right {
+  text-align: right;
+}
+
+.zara-util-link {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-black);
+  text-decoration: none;
+}
+
+.zara-util-link:hover {
+  text-decoration: underline;
+}
+
+/* Full-screen overlay menu */
+.zara-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: var(--color-white);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  pointer-events: none;
+}
+
+.zara-overlay.is-open {
+  pointer-events: auto;
+}
+
+.zara-overlay__top {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 2rem 3rem;
+  border-bottom: 1px solid var(--color-stone);
+}
+
+.zara-overlay__close {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-black);
+  padding: 0;
+}
+
+.zara-overlay__logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--color-black);
+  text-decoration: none;
+  text-align: center;
+}
+
+.zara-overlay__logo-img {
+  display: none;
+}
+
+.zara-overlay__logo-text {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  display: block;
+}
+
+.zara-overlay__search {
+  justify-self: end;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-black);
+  border: none;
+  border-bottom: 1px solid var(--color-black);
+  background: none;
+  padding: 0.25rem 0;
+  width: 8rem;
+}
+
+.zara-overlay__search::placeholder {
+  color: var(--color-grey);
+}
+
+.zara-overlay__content {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  flex: 1;
+  padding: 3rem 4rem;
+  gap: 4rem;
+  max-width: 100%;
+}
+
+.zara-overlay__col h3 {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--color-grey);
+  margin-bottom: 1.5rem;
+}
+
+.zara-overlay__col ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.zara-overlay__col li {
+  margin-bottom: 0.75rem;
+}
+
+.zara-overlay__col a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-black);
+  text-decoration: none;
+}
+
+.zara-overlay__col a:hover {
+  text-decoration: underline;
+}
+
+.zara-overlay__promo {
+  aspect-ratio: 3/4;
+  background: var(--color-sand);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.zara-overlay__promo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Page layout – side margins like Zara */
+.zara-page {
+  padding-top: 4rem;
+}
+
+.zara-layout {
+  display: grid;
+  grid-template-columns: 8rem 1fr 8rem;
+  min-height: 100vh;
+}
+
+.zara-side--left {
+  padding: 2rem 1rem;
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-black);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+
+.zara-side--right {
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.zara-main {
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Hero – Zara full viewport */
+.zara-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.zara-hero__bg {
+  position: absolute;
+  inset: 0;
+  background: url('https://images.unsplash.com/photo-1519741497674-611481863552?w=1920') center/cover no-repeat;
+}
+
+.zara-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.zara-hero__content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.zara-hero__title {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-white);
+  margin-bottom: 2rem;
+}
+
+.zara-hero__scroll {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+}
+
+.zara-hero__scroll:hover {
+  color: var(--color-white);
+}
+
+/* Image block – Zara product style */
+.zara-image-block {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 85vh;
+}
+
+.zara-image-block img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Section with side layout */
+.zara-section {
+  padding: 4rem 0;
+}
+
+.zara-section__inner {
+  display: grid;
+  grid-template-columns: 6rem 1fr 6rem;
+  gap: 2rem;
+}
+
+.zara-section__side {
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-black);
+}
+
+.zara-section__main {
+  min-width: 0;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .zara-header {
+    padding: 1rem;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .zara-header__left .zara-side-label {
+    display: none;
+  }
+
+  .zara-header__right {
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  .zara-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .zara-side--left,
+  .zara-side--right {
+    display: none;
+  }
+
+  .zara-overlay__content {
+    grid-template-columns: 1fr;
+    padding: 2rem 1.5rem;
+  }
+
+  .zara-overlay__top {
+    padding: 1.5rem 1rem;
+  }
+
+  .zara-image-block {
+    grid-template-columns: 1fr;
+  }
+
+  .zara-section__inner {
+    grid-template-columns: 1fr;
+  }
+
+  .zara-section__side {
+    display: none;
+  }
+}

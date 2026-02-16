@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>İçerik Yönetimi | LORENZ</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .admin h1 { font-size: 1.5rem; margin-bottom: 2rem; font-weight: 600; }
+    .admin-section { margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--color-stone); }
+    .admin-section:last-of-type { border-bottom: none; }
+    .admin-section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.1em; }
+    .admin-form { display: grid; gap: 1rem; margin-bottom: 1.5rem; }
+    .admin-form label { font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .admin-form input, .admin-form select { padding: 0.6rem 0.8rem; border: 1px solid var(--color-stone); font-size: 0.95rem; }
+    .admin-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }
+    .admin-actions .btn { padding: 0.5rem 1rem; font-size: 0.85rem; }
+    .admin-list { list-style: none; padding: 0; margin: 0; }
+    .admin-list li { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--color-stone); gap: 1rem; }
+    .admin-list li:last-child { border-bottom: none; }
+    .admin-list img { width: 60px; height: 45px; object-fit: cover; }
+    .admin-list .item-info { flex: 1; min-width: 0; }
+    .admin-list .item-title { font-weight: 600; font-size: 0.95rem; }
+    .admin-list .item-subtitle { font-size: 0.8rem; color: var(--color-grey); }
+    .admin-list .btn--small { padding: 0.25rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--color-black); background: transparent; }
+    .admin-message { padding: 1rem; margin: 1rem 0; border-radius: 4px; font-size: 0.9rem; }
+    .admin-message.success { background: #e8f5e9; color: #2e7d32; }
+    .admin-message.error { background: #ffebee; color: #c62828; }
+    .admin-back { display: inline-block; margin-top: 1rem; color: var(--color-black); text-decoration: none; font-size: 0.85rem; }
+    .admin-back:hover { text-decoration: underline; }
+    .services-block { margin-bottom: 2rem; padding: 1.25rem; border: 1px solid var(--color-stone); background: var(--color-cream, #fafafa); }
+    .services-block h3 { font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .services-card { margin-bottom: 1.25rem; padding: 1rem; border: 1px solid var(--color-stone); background: var(--color-white); }
+    .services-card:last-child { margin-bottom: 0.75rem; }
+    .services-card__row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .services-card__row.full { grid-template-columns: 1fr; }
+    .services-card__row label { font-size: 0.7rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem; }
+    .services-card__row input, .services-card__row textarea { padding: 0.5rem; border: 1px solid var(--color-stone); font-size: 0.9rem; width: 100%; }
+    .services-card__row textarea { min-height: 4rem; resize: vertical; }
+    .services-card__actions { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
+    .services-card .btn--small { padding: 0.25rem 0.5rem; font-size: 0.75rem; border: 1px solid var(--color-black); background: transparent; }
+    .services-add-btn { margin-top: 0.5rem; }
+    .admin-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .admin-login__box { max-width: 22rem; width: 100%; padding: 2.5rem; border: 1px solid var(--color-stone); }
+    .admin-login__title { font-size: 1.25rem; margin-bottom: 0.25rem; }
+    .admin-login__subtitle { font-size: 0.85rem; color: var(--color-grey); margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body class="zara-body">
+  <!-- Login screen -->
+  <div id="admin-login" class="admin-login">
+    <div class="admin-login__box">
+      <h1 class="admin-login__title">İçerik Yönetimi</h1>
+      <p class="admin-login__subtitle">Devam etmek için giriş yapın</p>
+      <form id="login-form" class="admin-form">
+        <div>
+          <label for="login-user">Kullanıcı adı</label>
+          <input type="text" id="login-user" required autocomplete="username">
+        </div>
+        <div>
+          <label for="login-pass">Şifre</label>
+          <input type="password" id="login-pass" required autocomplete="current-password">
+        </div>
+        <div id="login-error" class="admin-message error" style="display: none;"></div>
+        <button type="submit" class="btn btn--accent">Giriş Yap</button>
+      </form>
+      <a href="index.html" class="admin-back">← Ana Sayfaya Dön</a>
+    </div>
+  </div>
+
+  <!-- Admin content (hidden until logged in) -->
+  <header class="admin-header" id="admin-header" style="display: none;">
+    <div class="admin-header__left">
+      <a href="index.html" class="admin-header__back">← Ana Sayfaya Dön</a>
+      <span class="admin-header__title">İçerik Yönetimi</span>
+    </div>
+    <div class="admin-header__right">
+      <a href="admin-customers.html" class="btn btn--primary">Müşteriler</a>
+      <button type="button" class="btn" id="admin-logout">Çıkış</button>
+    </div>
+  </header>
+  <main class="admin admin-body" id="admin-content" style="display: none;">
+    <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">İçerik Yönetimi</h1>
+    <p style="font-size: 0.9rem; color: var(--color-grey); margin-bottom: 1.5rem;">Fotoğraf ve video ekleyin. <strong>Siteye kaydet</strong> ile doğrudan sitede yayınlanır (sunucu çalışıyorsa). Sunucu yoksa <strong>JSON İndir</strong> ile dosyayı indirip <code>data/</code> klasörüne koyun.</p>
+    <nav class="admin-nav" aria-label="İçerik bölümleri">
+      <a href="#section-photos">Fotoğraflar</a>
+      <a href="#section-videos">Videolar</a>
+      <a href="#section-featured">Ana Sayfa</a>
+      <a href="#section-services">Hizmetler</a>
+    </nav>
+
+    <!-- Photos -->
+    <section class="admin-section" id="section-photos">
+      <h2>Fotoğraflar</h2>
+      <form class="admin-form" id="photo-form">
+        <div>
+          <label for="photo-image">Görsel URL</label>
+          <input type="url" id="photo-image" placeholder="https://... (veya aşağıdan dosya seçin)">
+        </div>
+        <div>
+          <label for="photo-file">Veya bilgisayardan yükle</label>
+          <input type="file" id="photo-file" accept="image/*">
+          <p id="photo-file-name" style="font-size: 0.75rem; color: var(--color-grey); margin-top: 0.25rem;"></p>
+          <p style="font-size: 0.7rem; color: var(--color-grey); margin-top: 0.25rem;">Bilgisayardan seçtiğiniz görsel JSON içine gömülür; çok sayıda veya büyük dosyada gallery.json büyüyebilir.</p>
+        </div>
+        <div>
+          <label for="photo-title">Başlık</label>
+          <input type="text" id="photo-title" required placeholder="Ayşe & Mehmet">
+        </div>
+        <div>
+          <label for="photo-subtitle">Alt başlık</label>
+          <input type="text" id="photo-subtitle" placeholder="Düğün Töreni">
+        </div>
+        <div>
+          <label for="photo-category">Kategori</label>
+          <select id="photo-category">
+            <option value="dugun">Düğün</option>
+            <option value="nisan">Nişan</option>
+            <option value="isteme">İsteme</option>
+            <option value="ozel">Özel Günler</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn--accent">Fotoğraf Ekle</button>
+      </form>
+      <ul class="admin-list" id="photo-list"></ul>
+      <div class="admin-actions">
+        <button type="button" class="btn btn--accent" id="save-gallery">Siteye kaydet</button>
+        <button type="button" class="btn" id="export-gallery" style="border: 1px solid var(--color-black); background: transparent;">gallery.json İndir</button>
+      </div>
+    </section>
+
+    <!-- Videos -->
+    <section class="admin-section" id="section-videos">
+      <h2>Videolar</h2>
+      <form class="admin-form" id="video-form">
+        <div>
+          <label for="video-url">YouTube / Vimeo embed URL</label>
+          <input type="url" id="video-url" required placeholder="https://www.youtube.com/embed/...">
+        </div>
+        <div>
+          <label for="video-title">Başlık</label>
+          <input type="text" id="video-title" required placeholder="Esra & Cemal - Düğün Hikayesi">
+        </div>
+        <div>
+          <label for="video-subtitle">Alt başlık</label>
+          <input type="text" id="video-subtitle" placeholder="Hatay, 2024">
+        </div>
+        <button type="submit" class="btn btn--accent">Video Ekle</button>
+      </form>
+      <ul class="admin-list" id="video-list"></ul>
+      <div class="admin-actions">
+        <button type="button" class="btn btn--accent" id="save-videos">Siteye kaydet</button>
+        <button type="button" class="btn" id="export-videos" style="border: 1px solid var(--color-black); background: transparent;">videos.json İndir</button>
+      </div>
+    </section>
+
+    <!-- Hero & Featured -->
+    <section class="admin-section" id="section-featured">
+      <h2>Ana Sayfa</h2>
+      <form class="admin-form" id="featured-form">
+        <div>
+          <label for="hero-image">Hero arka plan görseli URL</label>
+          <input type="url" id="hero-image" placeholder="https://...">
+        </div>
+        <div>
+          <label for="hero-title">Hero başlık</label>
+          <input type="text" id="hero-title" placeholder="Yeni">
+        </div>
+        <button type="submit" class="btn btn--accent">Güncelle</button>
+      </form>
+      <div class="admin-actions">
+        <button type="button" class="btn btn--accent" id="save-featured">Siteye kaydet</button>
+        <button type="button" class="btn" id="export-featured" style="border: 1px solid var(--color-black); background: transparent;">featured.json İndir</button>
+      </div>
+    </section>
+
+    <!-- Hizmetler -->
+    <section class="admin-section" id="section-services">
+      <h2>Hizmetler</h2>
+      <p style="font-size: 0.8rem; color: var(--color-grey); margin-bottom: 1.25rem;">Hizmetler sayfasındaki başlık, paketler ve fiyatları aşağıdaki alanlardan düzenleyin.</p>
+
+      <div class="admin-form" style="margin-bottom: 1.5rem;">
+        <label for="services-page-title">Sayfa başlığı</label>
+        <input type="text" id="services-page-title" placeholder="Hizmetler & Fiyatlar">
+      </div>
+
+      <div class="services-block">
+        <h3>Fotoğrafçılık paketleri</h3>
+        <div class="admin-form" style="margin-bottom: 1rem;">
+          <label for="services-fotograf-label">Bölüm başlığı</label>
+          <input type="text" id="services-fotograf-label" placeholder="Fotoğrafçılık">
+        </div>
+        <div id="services-fotograf-cards"></div>
+        <button type="button" class="btn services-add-btn" id="services-fotograf-add" style="border: 1px solid var(--color-black); background: transparent; font-size: 0.85rem;">+ Paket ekle</button>
+      </div>
+
+      <div class="services-block">
+        <h3>Videografi paketleri</h3>
+        <div class="admin-form" style="margin-bottom: 1rem;">
+          <label for="services-video-label">Bölüm başlığı</label>
+          <input type="text" id="services-video-label" placeholder="Videografi">
+        </div>
+        <div id="services-video-cards"></div>
+        <button type="button" class="btn services-add-btn" id="services-video-add" style="border: 1px solid var(--color-black); background: transparent; font-size: 0.85rem;">+ Paket ekle</button>
+      </div>
+
+      <div class="services-block">
+        <h3>Organizasyon hizmetleri</h3>
+        <div class="admin-form" style="margin-bottom: 1rem;">
+          <label for="services-org-label">Bölüm başlığı</label>
+          <input type="text" id="services-org-label" placeholder="Organizasyon">
+        </div>
+        <div id="services-org-cards"></div>
+        <button type="button" class="btn services-add-btn" id="services-org-add" style="border: 1px solid var(--color-black); background: transparent; font-size: 0.85rem;">+ Hizmet ekle</button>
+      </div>
+
+      <div class="admin-actions" style="margin-top: 1.5rem;">
+        <button type="button" class="btn btn--accent" id="save-services">Siteye kaydet</button>
+        <button type="button" class="btn" id="export-services" style="border: 1px solid var(--color-black); background: transparent;">services.json İndir</button>
+      </div>
+    </section>
+
+    <div id="admin-message"></div>
+  </main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* === Admin credentials ===
+     * To generate a new password hash, run in browser console:
+     * crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourpassword'))
+     *   .then(h => console.log(Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''))); */
+    const ADMIN_USER = 'İbrahim Hotface';
+    const ADMIN_PASS_HASH = '3f2d079e573fb4e66b315466b7054237d52c1993db6eeb9b58d87ae58b601ce0'; /* sha256('LorenzWedding.%16') */
+
+    const SESSION_KEY = 'lorenz_admin_session';
+
+    function sha256(str) {
+      if (!crypto.subtle || !crypto.subtle.digest) {
+        return Promise.resolve('');
+      }
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
+        .then(function (h) {
+          return Array.from(new Uint8Array(h)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+        });
+    }
+
+    function isLoggedIn() {
+      return sessionStorage.getItem(SESSION_KEY) === '1';
+    }
+
+    function setLoggedIn(val) {
+      if (val) sessionStorage.setItem(SESSION_KEY, '1');
+      else sessionStorage.removeItem(SESSION_KEY);
+    }
+
+    function showAdmin() {
+      document.getElementById('admin-login').style.display = 'none';
+      var header = document.getElementById('admin-header');
+      var content = document.getElementById('admin-content');
+      if (header) header.style.display = 'flex';
+      if (content) content.style.display = 'block';
+    }
+
+    function showLogin() {
+      document.getElementById('admin-login').style.display = 'flex';
+      var header = document.getElementById('admin-header');
+      var content = document.getElementById('admin-content');
+      if (header) header.style.display = 'none';
+      if (content) content.style.display = 'none';
+    }
+
+    if (isLoggedIn()) {
+      sessionStorage.setItem('adminSecret', 'lorenz-admin-secret-change-me');
+      showAdmin();
+      initAdmin();
+    } else {
+      showLogin();
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var user = document.getElementById('login-user').value.trim().toLowerCase();
+      var pass = document.getElementById('login-pass').value.trim();
+      var errEl = document.getElementById('login-error');
+
+      var passOk = false;
+      if (user === ADMIN_USER.toLowerCase() && pass === 'LorenzWedding.%16') {
+        passOk = true;
+      }
+      sha256(pass).then(function (hash) {
+        if (passOk || (user === ADMIN_USER.toLowerCase() && hash === ADMIN_PASS_HASH)) {
+          setLoggedIn(true);
+          sessionStorage.setItem('adminSecret', 'lorenz-admin-secret-change-me');
+          showAdmin();
+          initAdmin();
+        } else {
+          errEl.textContent = 'Kullanıcı adı veya şifre hatalı.';
+          errEl.style.display = 'block';
+        }
+      }).catch(function () {
+        if (passOk) {
+          setLoggedIn(true);
+          showAdmin();
+          initAdmin();
+        } else {
+          errEl.textContent = 'Kullanıcı adı veya şifre hatalı.';
+          errEl.style.display = 'block';
+        }
+      });
+    });
+
+    document.getElementById('admin-logout').addEventListener('click', function () {
+      setLoggedIn(false);
+      sessionStorage.removeItem('adminSecret');
+      showLogin();
+      document.getElementById('login-user').value = '';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-error').style.display = 'none';
+    });
+
+    function initAdmin() {
+      loadData();
+    }
+
+    const GALLERY_CATEGORIES = [
+      { id: 'dugun', label: 'Düğün' },
+      { id: 'nisan', label: 'Nişan' },
+      { id: 'isteme', label: 'İsteme' },
+      { id: 'ozel', label: 'Özel Günler' }
+    ];
+
+    let galleryData = { categories: GALLERY_CATEGORIES, items: [] };
+    let videosData = { items: [] };
+    let featuredData = { hero: {}, imageBlocks: [], articles: [] };
+
+    function showMessage(text, type) {
+      const el = document.getElementById('admin-message');
+      el.textContent = text;
+      el.className = 'admin-message ' + (type || 'success');
+      el.style.display = 'block';
+      setTimeout(function () { el.style.display = 'none'; }, 3000);
+    }
+
+    function genId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+
+    function loadData() {
+      fetch('data/gallery.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { if (d) galleryData = d; renderPhotos(); });
+
+      fetch('data/videos.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) { if (d) videosData = d; renderVideos(); });
+
+      fetch('data/featured.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (d) featuredData = d;
+          var h = featuredData.hero || {};
+          document.getElementById('hero-image').value = h.image || '';
+          document.getElementById('hero-title').value = h.title || '';
+        });
+
+      fetch('data/services.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (d) fillServicesForm(d);
+        });
+    }
+
+    function fillServicesForm(data) {
+      document.getElementById('services-page-title').value = data.pageTitle || '';
+      document.getElementById('services-fotograf-label').value = (data.fotograf && data.fotograf.label) ? data.fotograf.label : 'Fotoğrafçılık';
+      document.getElementById('services-video-label').value = (data.video && data.video.label) ? data.video.label : 'Videografi';
+      document.getElementById('services-org-label').value = (data.organizasyon && data.organizasyon.label) ? data.organizasyon.label : 'Organizasyon';
+      renderServicesCards('services-fotograf-cards', (data.fotograf && data.fotograf.cards) ? data.fotograf.cards : [], 'price');
+      renderServicesCards('services-video-cards', (data.video && data.video.cards) ? data.video.cards : [], 'price');
+      renderServicesCards('services-org-cards', (data.organizasyon && data.organizasyon.cards) ? data.organizasyon.cards : [], 'org');
+    }
+
+    function renderServicesCards(containerId, cards, type) {
+      var container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = cards.map(function (card, i) {
+        if (type === 'price') {
+          var features = (card.features && card.features.length) ? card.features.join('\n') : '';
+          return '<div class="services-card" data-index="' + i + '">' +
+            '<div class="services-card__row"><label>Paket adı</label><input type="text" class="card-title" placeholder="Başlangıç" value="' + escapeAttr(card.title || '') + '"></div>' +
+            '<div class="services-card__row"><label>Paket kodu (iletişim linki, örn. baslangic)</label><input type="text" class="card-id" placeholder="Otomatik" value="' + escapeAttr(card.id || '') + '"></div>' +
+            '<div class="services-card__row"><label>Fiyat</label><input type="text" class="card-price" placeholder="₺15.000" value="' + escapeAttr(card.price || '') + '"></div>' +
+            '<div class="services-card__row"><label>Birim</label><input type="text" class="card-priceUnit" placeholder="/gün" value="' + escapeAttr(card.priceUnit || '') + '"></div>' +
+            '<div class="services-card__row full"><label>Özellikler (her satıra bir özellik)</label><textarea class="card-features" rows="4" placeholder="4 saat çekim">' + escapeAttr(features) + '</textarea></div>' +
+            '<div class="services-card__row"><label>Buton metni</label><input type="text" class="card-buttonText" placeholder="Teklif Al" value="' + escapeAttr(card.buttonText || 'Teklif Al') + '"></div>' +
+            '<div class="services-card__row"><label>Rozet (opsiyonel, örn. Popüler)</label><input type="text" class="card-badge" placeholder="Boş bırakılabilir" value="' + escapeAttr(card.badge || '') + '"></div>' +
+            '<div class="services-card__row"><label><input type="checkbox" class="card-featured" ' + (card.featured ? 'checked' : '') + '> Öne çıkan paket</label></div>' +
+            '<div class="services-card__actions"><span></span><button type="button" class="btn btn--small services-card-remove">Sil</button></div></div>';
+        } else {
+          return '<div class="services-card" data-index="' + i + '">' +
+            '<div class="services-card__row full"><label>Başlık</label><input type="text" class="card-title" placeholder="Nişan / İsteme" value="' + escapeAttr(card.title || '') + '"></div>' +
+            '<div class="services-card__row full"><label>Açıklama</label><textarea class="card-description" rows="3" placeholder="Kısa açıklama">' + escapeAttr(card.description || '') + '</textarea></div>' +
+            '<div class="services-card__row"><label>Buton metni</label><input type="text" class="card-buttonText" placeholder="Detaylı Bilgi" value="' + escapeAttr(card.buttonText || 'Detaylı Bilgi') + '"></div>' +
+            '<div class="services-card__actions"><span></span><button type="button" class="btn btn--small services-card-remove">Sil</button></div></div>';
+        }
+      }).join('');
+      container.querySelectorAll('.services-card-remove').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          btn.closest('.services-card').remove();
+          showMessage('Paket kaldırıldı.');
+        });
+      });
+    }
+
+    function escapeAttr(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function addPriceCard(containerId) {
+      var container = document.getElementById(containerId);
+      if (!container) return;
+      var empty = { id: '', title: '', price: '', priceUnit: '/gün', features: [], buttonText: 'Teklif Al', featured: false, badge: null };
+      var cards = container.querySelectorAll('.services-card').length;
+      var div = document.createElement('div');
+      div.className = 'services-card';
+      div.setAttribute('data-index', cards);
+      div.innerHTML = '<div class="services-card__row"><label>Paket adı</label><input type="text" class="card-title" placeholder="Başlangıç"></div>' +
+        '<div class="services-card__row"><label>Paket kodu (iletişim linki)</label><input type="text" class="card-id" placeholder="Otomatik"></div>' +
+        '<div class="services-card__row"><label>Fiyat</label><input type="text" class="card-price" placeholder="₺15.000"></div>' +
+        '<div class="services-card__row"><label>Birim</label><input type="text" class="card-priceUnit" placeholder="/gün" value="/gün"></div>' +
+        '<div class="services-card__row full"><label>Özellikler (her satıra bir özellik)</label><textarea class="card-features" rows="4" placeholder="4 saat çekim"></textarea></div>' +
+        '<div class="services-card__row"><label>Buton metni</label><input type="text" class="card-buttonText" placeholder="Teklif Al" value="Teklif Al"></div>' +
+        '<div class="services-card__row"><label>Rozet (opsiyonel)</label><input type="text" class="card-badge" placeholder="Popüler"></div>' +
+        '<div class="services-card__row"><label><input type="checkbox" class="card-featured"> Öne çıkan paket</label></div>' +
+        '<div class="services-card__actions"><span></span><button type="button" class="btn btn--small services-card-remove">Sil</button></div>';
+      div.querySelector('.services-card-remove').addEventListener('click', function () {
+        div.remove();
+        showMessage('Paket kaldırıldı.');
+      });
+      container.appendChild(div);
+    }
+
+    function addOrgCard(containerId) {
+      var container = document.getElementById(containerId);
+      if (!container) return;
+      var div = document.createElement('div');
+      div.className = 'services-card';
+      div.innerHTML = '<div class="services-card__row full"><label>Başlık</label><input type="text" class="card-title" placeholder="Nişan / İsteme"></div>' +
+        '<div class="services-card__row full"><label>Açıklama</label><textarea class="card-description" rows="3" placeholder="Kısa açıklama"></textarea></div>' +
+        '<div class="services-card__row"><label>Buton metni</label><input type="text" class="card-buttonText" placeholder="Detaylı Bilgi" value="Detaylı Bilgi"></div>' +
+        '<div class="services-card__actions"><span></span><button type="button" class="btn btn--small services-card-remove">Sil</button></div>';
+      div.querySelector('.services-card-remove').addEventListener('click', function () {
+        div.remove();
+        showMessage('Hizmet kaldırıldı.');
+      });
+      container.appendChild(div);
+    }
+
+    function getServicesFromForm() {
+      function toId(title) {
+        return (title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'paket';
+      }
+      function collectPriceCards(containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return [];
+        var cards = [];
+        container.querySelectorAll('.services-card').forEach(function (el, i) {
+          var titleEl = el.querySelector('.card-title');
+          var title = titleEl ? titleEl.value.trim() : '';
+          var idEl = el.querySelector('.card-id');
+          var idVal = idEl ? idEl.value.trim() : '';
+          var featuresEl = el.querySelector('.card-features');
+          var featuresStr = featuresEl ? featuresEl.value.trim() : '';
+          var features = featuresStr ? featuresStr.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean) : [];
+          cards.push({
+            id: idVal || (toId(title) || 'paket') + '-' + i,
+            title: title,
+            price: (el.querySelector('.card-price') && el.querySelector('.card-price').value.trim()) || '',
+            priceUnit: (el.querySelector('.card-priceUnit') && el.querySelector('.card-priceUnit').value.trim()) || '/gün',
+            features: features,
+            buttonText: (el.querySelector('.card-buttonText') && el.querySelector('.card-buttonText').value.trim()) || 'Teklif Al',
+            featured: (el.querySelector('.card-featured') && el.querySelector('.card-featured').checked) || false,
+            badge: (el.querySelector('.card-badge') && el.querySelector('.card-badge').value.trim()) || null
+          });
+        });
+        return cards;
+      }
+      function collectOrgCards(containerId) {
+        var container = document.getElementById(containerId);
+        if (!container) return [];
+        var cards = [];
+        container.querySelectorAll('.services-card').forEach(function (el) {
+          cards.push({
+            title: (el.querySelector('.card-title') && el.querySelector('.card-title').value.trim()) || '',
+            description: (el.querySelector('.card-description') && el.querySelector('.card-description').value.trim()) || '',
+            buttonText: (el.querySelector('.card-buttonText') && el.querySelector('.card-buttonText').value.trim()) || 'Detaylı Bilgi'
+          });
+        });
+        return cards;
+      }
+      return {
+        pageTitle: document.getElementById('services-page-title').value.trim() || 'Hizmetler & Fiyatlar',
+        fotograf: {
+          label: document.getElementById('services-fotograf-label').value.trim() || 'Fotoğrafçılık',
+          cards: collectPriceCards('services-fotograf-cards')
+        },
+        video: {
+          label: document.getElementById('services-video-label').value.trim() || 'Videografi',
+          cards: collectPriceCards('services-video-cards')
+        },
+        organizasyon: {
+          label: document.getElementById('services-org-label').value.trim() || 'Organizasyon',
+          cards: collectOrgCards('services-org-cards')
+        }
+      };
+    }
+
+    function renderPhotos() {
+      const list = document.getElementById('photo-list');
+      list.innerHTML = galleryData.items.map(function (item) {
+        return '<li data-id="' + item.id + '">' +
+          '<img src="' + (item.image || '') + '" alt="">' +
+          '<div class="item-info">' +
+          '<span class="item-title">' + (item.title || '') + '</span>' +
+          '<span class="item-subtitle">' + (item.subtitle || '') + '</span>' +
+          '</div>' +
+          '<button type="button" class="btn btn--small" data-delete-photo style="border: 1px solid var(--color-black); background: transparent;">Sil</button>' +
+          '</li>';
+      }).join('');
+
+      list.querySelectorAll('[data-delete-photo]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.closest('li').dataset.id;
+          galleryData.items = galleryData.items.filter(function (i) { return i.id !== id; });
+          renderPhotos();
+          showMessage('Fotoğraf silindi.');
+        });
+      });
+    }
+
+    function renderVideos() {
+      const list = document.getElementById('video-list');
+      list.innerHTML = videosData.items.map(function (item) {
+        return '<li data-id="' + item.id + '">' +
+          '<div class="item-info">' +
+          '<span class="item-title">' + (item.title || '') + '</span>' +
+          '<span class="item-subtitle">' + (item.subtitle || '') + '</span>' +
+          '</div>' +
+          '<button type="button" class="btn btn--small" data-delete-video style="border: 1px solid var(--color-black); background: transparent;">Sil</button>' +
+          '</li>';
+      }).join('');
+
+      list.querySelectorAll('[data-delete-video]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.closest('li').dataset.id;
+          videosData.items = videosData.items.filter(function (i) { return i.id !== id; });
+          renderVideos();
+          showMessage('Video silindi.');
+        });
+      });
+    }
+
+    function downloadJSON(filename, data) {
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    var photoUploadDataUrl = null;
+
+    document.getElementById('photo-file').addEventListener('change', function () {
+      var file = this.files[0];
+      var nameEl = document.getElementById('photo-file-name');
+      if (!file || !file.type.startsWith('image/')) {
+        photoUploadDataUrl = null;
+        nameEl.textContent = '';
+        return;
+      }
+      nameEl.textContent = file.name;
+      var reader = new FileReader();
+      reader.onload = function () {
+        photoUploadDataUrl = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('photo-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var imageUrl = document.getElementById('photo-image').value.trim();
+      var imageSrc = photoUploadDataUrl || imageUrl;
+      if (!imageSrc) {
+        showMessage('Görsel URL girin veya bilgisayardan bir dosya seçin.', 'error');
+        return;
+      }
+      galleryData.items.push({
+        id: genId(),
+        image: imageSrc,
+        title: document.getElementById('photo-title').value,
+        subtitle: document.getElementById('photo-subtitle').value,
+        category: document.getElementById('photo-category').value
+      });
+      renderPhotos();
+      this.reset();
+      photoUploadDataUrl = null;
+      document.getElementById('photo-file').value = '';
+      document.getElementById('photo-file-name').textContent = '';
+      showMessage('Fotoğraf eklendi. Hemen sitede görünsün isterseniz "Siteye kaydet"e tıklayın (sunucu çalışıyorsa).');
+    });
+
+    document.getElementById('video-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var url = document.getElementById('video-url').value;
+      if (url.includes('youtube.com/watch')) {
+        var v = url.match(/v=([^&]+)/);
+        if (v) url = 'https://www.youtube.com/embed/' + v[1];
+      }
+      videosData.items.push({
+        id: genId(),
+        embedUrl: url,
+        title: document.getElementById('video-title').value,
+        subtitle: document.getElementById('video-subtitle').value
+      });
+      renderVideos();
+      this.reset();
+      showMessage('Video eklendi.');
+    });
+
+    document.getElementById('featured-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      featuredData.hero = {
+        image: document.getElementById('hero-image').value,
+        title: document.getElementById('hero-title').value || 'Yeni'
+      };
+      showMessage('Ana sayfa ayarları güncellendi. featured.json indirip data/ klasörüne koyun.');
+    });
+
+    function saveToSite(apiPath, data, label) {
+      var secret = sessionStorage.getItem('adminSecret');
+      var headers = { 'Content-Type': 'application/json' };
+      if (secret) headers['X-Admin-Secret'] = secret;
+      fetch(apiPath, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(data)
+      }).then(function (res) {
+        if (res.ok) {
+          showMessage(label + ' siteye kaydedildi. Sayfayı yenileyerek görebilirsiniz.');
+        } else if (res.status === 403) {
+          showMessage('Yetkisiz. Tekrar giriş yapın.', 'error');
+        } else {
+          showMessage('Kaydetme başarısız.', 'error');
+        }
+      }).catch(function () {
+        showMessage('Sunucu çalışmıyor. Önce proje klasöründe "npm start" çalıştırın, sonra tekrar deneyin. Veya JSON İndir ile dosyayı data/ klasörüne kopyalayın.', 'error');
+      });
+    }
+
+    document.getElementById('save-gallery').addEventListener('click', function () {
+      saveToSite('/api/save-gallery', galleryData, 'Fotoğraflar');
+    });
+
+    document.getElementById('save-videos').addEventListener('click', function () {
+      saveToSite('/api/save-videos', videosData, 'Videolar');
+    });
+
+    document.getElementById('save-featured').addEventListener('click', function () {
+      saveToSite('/api/save-featured', featuredData, 'Ana sayfa');
+    });
+
+    document.getElementById('services-fotograf-add').addEventListener('click', function () {
+      addPriceCard('services-fotograf-cards');
+      showMessage('Fotoğrafçılık paketi eklendi.');
+    });
+    document.getElementById('services-video-add').addEventListener('click', function () {
+      addPriceCard('services-video-cards');
+      showMessage('Videografi paketi eklendi.');
+    });
+    document.getElementById('services-org-add').addEventListener('click', function () {
+      addOrgCard('services-org-cards');
+      showMessage('Organizasyon hizmeti eklendi.');
+    });
+
+    document.getElementById('save-services').addEventListener('click', function () {
+      var data = getServicesFromForm();
+      saveToSite('/api/save-services', data, 'Hizmetler');
+    });
+
+    document.getElementById('export-services').addEventListener('click', function () {
+      var data = getServicesFromForm();
+      downloadJSON('services.json', data);
+      showMessage('services.json indirildi.');
+    });
+
+    document.getElementById('export-gallery').addEventListener('click', function () {
+      downloadJSON('gallery.json', galleryData);
+      showMessage('gallery.json indirildi. data/ klasörüne koyup yeniden yayınlayın.');
+    });
+
+    document.getElementById('export-videos').addEventListener('click', function () {
+      downloadJSON('videos.json', videosData);
+      showMessage('videos.json indirildi. data/ klasörüne koyup yeniden yayınlayın.');
+    });
+
+    document.getElementById('export-featured').addEventListener('click', function () {
+      downloadJSON('featured.json', featuredData);
+      showMessage('featured.json indirildi. data/ klasörüne koyup yeniden yayınlayın.');
+    });
+  })();
+  </script>
+</body>
+</html>

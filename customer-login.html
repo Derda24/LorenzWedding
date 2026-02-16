@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Müşteri Girişi | LORENZ</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .customer-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; }
+    .customer-login__box { max-width: 22rem; width: 100%; padding: 2.5rem; border: 1px solid var(--color-stone); }
+    .customer-login__title { font-size: 1.25rem; margin-bottom: 0.25rem; }
+    .customer-login__subtitle { font-size: 0.85rem; color: var(--color-grey); margin-bottom: 1.5rem; }
+    .customer-login label { font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.25rem; }
+    .customer-login input { width: 100%; padding: 0.6rem 0.8rem; border: 1px solid var(--color-stone); font-size: 0.95rem; margin-bottom: 1rem; }
+    .customer-login .btn { width: 100%; padding: 0.75rem; }
+    .customer-login .error { font-size: 0.85rem; color: #c62828; margin-bottom: 1rem; }
+    .customer-login .back { display: inline-block; margin-top: 1rem; color: var(--color-grey); text-decoration: none; font-size: 0.85rem; }
+    .customer-login .back:hover { color: var(--color-black); }
+  </style>
+</head>
+<body class="zara-body">
+  <div class="customer-login">
+    <div class="customer-login__box">
+      <h1 class="customer-login__title">Müşteri Paneli</h1>
+      <p class="customer-login__subtitle">Lorenz Wedding – Fotoğraflarınızı seçmek için giriş yapın</p>
+      <form id="customer-login-form">
+        <label for="cust-username">Kullanıcı adı</label>
+        <input type="text" id="cust-username" required autocomplete="username">
+        <label for="cust-password">Şifre</label>
+        <input type="password" id="cust-password" required autocomplete="current-password">
+        <p id="cust-login-error" class="error" style="display: none;"></p>
+        <button type="submit" class="btn btn--accent">Giriş Yap</button>
+      </form>
+      <a href="index.html" class="back">Ana Sayfaya Dön</a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      document.getElementById('customer-login-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var err = document.getElementById('cust-login-error');
+        err.style.display = 'none';
+        fetch('/api/customer-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            username: document.getElementById('cust-username').value.trim(),
+            password: document.getElementById('cust-password').value
+          })
+        }).then(function (r) {
+          return r.json().then(function (data) {
+            if (r.ok) {
+              window.location.href = 'customer-panel.html';
+            } else {
+              err.textContent = data.error || 'Giriş başarısız.';
+              err.style.display = 'block';
+            }
+          });
+        }).catch(function () {
+          err.textContent = 'Bağlantı hatası. Sunucu çalışıyor mu?';
+          err.style.display = 'block';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

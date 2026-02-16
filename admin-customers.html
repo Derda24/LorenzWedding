@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Müşteriler | LORENZ</title>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .ac { max-width: 56rem; margin: 0 auto; padding: 2rem; }
+    .ac h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .ac-back { display: inline-block; margin-bottom: 1rem; color: var(--color-black); text-decoration: none; font-size: 0.85rem; }
+    .ac-back:hover { text-decoration: underline; }
+    .ac-section { margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--color-stone); }
+    .ac-form { display: grid; gap: 0.75rem; margin-bottom: 1rem; max-width: 24rem; }
+    .ac-form label { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+    .ac-form input { padding: 0.5rem 0.75rem; border: 1px solid var(--color-stone); }
+    .ac-list { list-style: none; padding: 0; margin: 0; }
+    .ac-list li { padding: 1rem; border: 1px solid var(--color-stone); margin-bottom: 0.5rem; }
+    .ac-list .name { font-weight: 600; }
+    .ac-list .username { font-size: 0.85rem; color: var(--color-grey); }
+    .ac-list .approved { font-size: 0.75rem; color: #2e7d32; margin-top: 0.25rem; }
+    .ac-list .album-actions { margin-top: 0.75rem; }
+    .ac-list .album-actions input[type=file] { font-size: 0.8rem; }
+    .ac-list .ac-view-selected { margin-left: 0.5rem; font-size: 0.8rem; }
+    .ac-selected-photos { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-stone); }
+    .ac-selected-photos h4 { font-size: 0.85rem; margin-bottom: 0.5rem; }
+    .ac-selected-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem; }
+    .ac-selected-grid__item { text-align: center; }
+    .ac-selected-grid__item img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; border: 2px solid var(--color-black); }
+    .ac-selected-grid__code { font-size: 0.7rem; color: var(--color-grey); margin-top: 0.25rem; word-break: break-all; }
+    .ac-msg { padding: 0.75rem; margin: 0.5rem 0; border-radius: 4px; font-size: 0.9rem; }
+    .ac-msg.ok { background: #e8f5e9; color: #2e7d32; }
+    .ac-msg.err { background: #ffebee; color: #c62828; }
+  </style>
+</head>
+<body class="zara-body">
+  <header class="admin-header">
+    <div class="admin-header__left">
+      <a href="admin.html" class="admin-header__back">← İçerik yönetimine dön</a>
+      <span class="admin-header__title">Müşteriler</span>
+    </div>
+    <div class="admin-header__right">
+      <button type="button" class="btn" id="ac-logout">Çıkış</button>
+    </div>
+  </header>
+  <main class="ac">
+    <h1>Müşteriler</h1>
+    <p style="font-size: 0.9rem; color: var(--color-grey); margin-bottom: 1.5rem;">Müşteri oluştur, albüm aç, fotoğraf yükle. Müşteri girişi: <a href="customer-login.html" target="_blank">customer-login.html</a></p>
+    <div id="ac-msg"></div>
+
+    <section class="ac-section">
+      <h2 style="font-size: 1rem; margin-bottom: 0.75rem;">Yeni müşteri</h2>
+      <form id="form-customer" class="ac-form">
+        <label for="c-username">Kullanıcı adı (girişte kullanılacak)</label>
+        <input type="text" id="c-username" required>
+        <label for="c-password">Şifre</label>
+        <input type="password" id="c-password" required>
+        <label for="c-name">Ad / çift adı</label>
+        <input type="text" id="c-name" placeholder="Örn. Ayşe & Mehmet">
+        <button type="submit" class="btn btn--accent">Müşteri oluştur</button>
+      </form>
+    </section>
+
+    <section class="ac-section">
+      <h2 style="font-size: 1rem; margin-bottom: 0.75rem;">Müşteri listesi</h2>
+      <ul class="ac-list" id="customer-list"></ul>
+    </section>
+  </main>
+  <script>
+    (function () {
+      var secret = sessionStorage.getItem('adminSecret');
+      if (!secret) {
+        window.location.href = 'admin.html';
+        return;
+      }
+      function headers() {
+        return { 'Content-Type': 'application/json', 'X-Admin-Secret': secret };
+      }
+      function msg(t, type) {
+        var el = document.getElementById('ac-msg');
+        el.textContent = t;
+        el.className = 'ac-msg ' + (type || 'ok');
+        el.style.display = 'block';
+        setTimeout(function () { el.style.display = 'none'; }, 4000);
+      }
+      function loadCustomers() {
+        fetch('/api/admin/customers', { headers: { 'X-Admin-Secret': secret } })
+          .then(function (r) { return r.json(); })
+          .then(function (list) {
+            var seen = {};
+            list = (list || []).filter(function (r) {
+              if (seen[r.id]) return false;
+              seen[r.id] = true;
+              return true;
+            });
+            var ul = document.getElementById('customer-list');
+            if (list.length === 0) {
+              ul.innerHTML = '<li>Henüz müşteri yok. Yukarıdan ekleyin.</li>';
+              return;
+            }
+            ul.innerHTML = list.map(function (c) {
+              var albumId = c.album_id;
+              var approved = c.approved_at ? '<span class="approved">Onaylandı: ' + c.approved_at + '</span>' : '';
+              var viewBtn = albumId ? '<button type="button" class="btn ac-view-selected" data-album-id="' + albumId + '">Seçilen fotoğrafları gör</button>' : '';
+              return '<li data-customer-id="' + c.id + '">' +
+                '<span class="name">' + (c.name || c.username) + '</span>' +
+                ' <span class="username">(' + c.username + ')</span>' +
+                approved +
+                '<div class="album-actions" data-customer-id="' + c.id + '">' +
+                (!albumId ? '<button type="button" class="btn ac-create-album" style="margin-top: 0.5rem; font-size: 0.8rem;">Albüm oluştur</button>' :
+                  ' Albüm var. <input type="file" accept="image/*,.png,.PNG" multiple class="ac-upload" title="PNG, JPG vb." data-album-id="' + albumId + '"> <button type="button" class="btn ac-upload-btn" style="font-size: 0.8rem;" data-album-id="' + albumId + '">Yükle</button>' + viewBtn) +
+                '<div class="ac-selected-photos" id="ac-selected-' + albumId + '" style="display: none;"></div>' +
+                '</div></li>';
+            }).join('');
+            ul.querySelectorAll('.ac-create-album').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var id = Number(btn.closest('[data-customer-id]').dataset.customerId);
+                fetch('/api/admin/albums', { method: 'POST', headers: headers(), body: JSON.stringify({ customer_id: id }) })
+                  .then(function (r) { return r.json(); })
+                  .then(function (data) {
+                    if (data.ok) { msg('Albüm oluşturuldu.'); loadCustomers(); }
+                    else msg(data.error || 'Hata', 'err');
+                  })
+                  .catch(function () { msg('Bağlantı hatası.', 'err'); });
+              });
+            });
+            ul.querySelectorAll('.ac-upload-btn').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var albumId = btn.dataset.albumId;
+                var input = btn.parentElement.querySelector('.ac-upload');
+                var files = input && input.files;
+                if (!files || files.length === 0) { msg('Önce dosya seçin.', 'err'); return; }
+                var fd = new FormData();
+                for (var i = 0; i < files.length; i++) fd.append('photos', files[i]);
+                fetch('/api/admin/albums/' + albumId + '/photos', {
+                  method: 'POST',
+                  headers: { 'X-Admin-Secret': secret },
+                  body: fd
+                }).then(function (r) { return r.json(); })
+                  .then(function (data) {
+                    if (data.ok) { msg(data.count + ' fotoğraf yüklendi.'); input.value = ''; }
+                    else msg('Yükleme hatası.', 'err');
+                  })
+                  .catch(function () { msg('Bağlantı hatası.', 'err'); });
+              });
+            });
+            ul.querySelectorAll('.ac-view-selected').forEach(function (btn) {
+              btn.addEventListener('click', function () {
+                var albumId = btn.dataset.albumId;
+                var container = document.getElementById('ac-selected-' + albumId);
+                if (container.style.display === 'block') {
+                  container.style.display = 'none';
+                  btn.textContent = 'Seçilen fotoğrafları gör';
+                  return;
+                }
+                fetch('/api/admin/albums/' + albumId, { headers: { 'X-Admin-Secret': secret } })
+                  .then(function (r) { return r.json(); })
+                  .then(function (data) {
+                    var selected = (data.photos || []).filter(function (p) { return p.selected; });
+                    if (selected.length === 0) {
+                      container.innerHTML = '<h4>Henüz seçim yapılmadı</h4><p style="font-size: 0.85rem; color: var(--color-grey);">Müşteri panelden fotoğraf seçip onaylayana kadar bu alan boş kalır.</p>';
+                    } else {
+                      container.innerHTML = '<h4>Müşterinin seçtiği fotoğraflar (' + selected.length + ')</h4>' +
+                        (data.approvedAt ? '<p style="font-size: 0.75rem; color: #2e7d32;">Onay tarihi: ' + data.approvedAt + '</p>' : '') +
+                        '<p style="font-size: 0.75rem; color: var(--color-grey); margin-bottom: 0.5rem;">Her fotoğrafın altındaki kod, sipariş ve dosya eşleştirmesi için kullanılabilir.</p>' +
+                        '<div class="ac-selected-grid">' +
+                        selected.map(function (p) {
+                          var code = 'Kod: ' + p.id;
+                          if (p.filename) code += ' · ' + String(p.filename).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                          return '<div class="ac-selected-grid__item"><img src="' + p.url + '" alt=""><span class="ac-selected-grid__code">' + code + '</span></div>';
+                        }).join('') +
+                        '</div>';
+                    }
+                    container.style.display = 'block';
+                    btn.textContent = 'Seçilenleri gizle';
+                  })
+                  .catch(function () { msg('Albüm yüklenemedi.', 'err'); });
+              });
+            });
+          })
+          .catch(function () { document.getElementById('customer-list').innerHTML = '<li>Sunucuya bağlanılamadı. npm start çalışıyor mu?</li>'; });
+      }
+      document.getElementById('form-customer').addEventListener('submit', function (e) {
+        e.preventDefault();
+        fetch('/api/admin/customers', {
+          method: 'POST',
+          headers: headers(),
+          body: JSON.stringify({
+            username: document.getElementById('c-username').value.trim(),
+            password: document.getElementById('c-password').value,
+            name: document.getElementById('c-name').value.trim()
+          })
+        }).then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data.ok) { msg('Müşteri oluşturuldu.'); this.reset(); loadCustomers(); }
+            else msg(data.error || 'Hata', 'err');
+          }.bind(this))
+          .catch(function () { msg('Bağlantı hatası.', 'err'); });
+      });
+      document.getElementById('ac-logout').addEventListener('click', function () {
+        sessionStorage.removeItem('adminSecret');
+        window.location.href = 'admin.html';
+      });
+      loadCustomers();
+    })();
+  </script>
+</body>
+</html>

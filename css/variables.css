@@ -1,0 +1,90 @@
+/**
+ * Design System Variables
+ * Lorenz Wedding Photo & Film
+ */
+
+:root {
+  /* Monochrome palette – black, grey, white */
+  --color-primary: #1a1a1a;
+  --color-primary-light: #2c2c2c;
+  --color-black: #1a1a1a;
+  --color-grey-dark: #4a4a4a;
+  --color-grey: #6b6b6b;
+  --color-grey-light: #9a9a9a;
+  --color-grey-muted: rgba(0, 0, 0, 0.15);
+
+  /* Neutrals */
+  --color-white: #ffffff;
+  --color-cream: #fafafa;
+  --color-sand: #f5f5f5;
+  --color-stone: #e5e5e5;
+  --color-charcoal: #2c2c2c;
+  --color-ink: #1a1a1a;
+
+  /* Typography */
+  --font-display: 'Playfair Display', 'Georgia', serif;
+  --font-body: 'DM Sans', 'Segoe UI', system-ui, sans-serif;
+
+  /* Font Sizes - Fluid typography */
+  --text-xs: clamp(0.75rem, 1.5vw, 0.8125rem);
+  --text-sm: clamp(0.875rem, 1.5vw, 0.9375rem);
+  --text-base: clamp(1rem, 2vw, 1.0625rem);
+  --text-lg: clamp(1.125rem, 2vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 2.5vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 3vw, 2rem);
+  --text-3xl: clamp(2rem, 4vw, 2.5rem);
+  --text-4xl: clamp(2.5rem, 5vw, 3.5rem);
+  --text-5xl: clamp(3rem, 6vw, 4.5rem);
+
+  /* Line Heights */
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+
+  /* Layout */
+  --container-max: 75rem;
+  --container-narrow: 50rem;
+  --container-wide: 90rem;
+
+  /* Transitions & Easing */
+  --transition-fast: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 450ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 24px;
+
+  /* Z-Index Scale */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+}

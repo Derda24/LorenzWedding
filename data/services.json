@@ -1,0 +1,121 @@
+{
+  "pageTitle": "Hizmetler & Fiyatlar",
+  "fotograf": {
+    "label": "Fotoğrafçılık",
+    "cards": [
+      {
+        "id": "baslangic",
+        "title": "Başlangıç",
+        "price": "₺15.000",
+        "priceUnit": "/gün",
+        "features": [
+          "4 saat çekim",
+          "400+ düzenlenmiş fotoğraf",
+          "Online galeri",
+          "USB teslimat"
+        ],
+        "buttonText": "Teklif Al",
+        "featured": false,
+        "badge": null
+      },
+      {
+        "id": "standart",
+        "title": "Standart",
+        "price": "₺22.000",
+        "priceUnit": "/gün",
+        "features": [
+          "8 saat çekim",
+          "600+ düzenlenmiş fotoğraf",
+          "Online galeri",
+          "USB teslimat",
+          "Albüm tasarımı"
+        ],
+        "buttonText": "Teklif Al",
+        "featured": true,
+        "badge": "Popüler"
+      },
+      {
+        "id": "premium",
+        "title": "Premium",
+        "price": "₺35.000",
+        "priceUnit": "/gün",
+        "features": [
+          "Tam gün çekim",
+          "1000+ düzenlenmiş fotoğraf",
+          "Online galeri",
+          "USB + albüm",
+          "Pre-wedding çekimi",
+          "2 fotoğrafçı"
+        ],
+        "buttonText": "Teklif Al",
+        "featured": false,
+        "badge": null
+      }
+    ]
+  },
+  "video": {
+    "label": "Videografi",
+    "cards": [
+      {
+        "id": "video-kisa",
+        "title": "Kısa Film",
+        "price": "₺12.000",
+        "priceUnit": "/gün",
+        "features": [
+          "4-5 dakika özet video",
+          "Profesyonel müzik",
+          "Drone çekimi",
+          "Online teslimat"
+        ],
+        "buttonText": "Teklif Al",
+        "featured": false,
+        "badge": null
+      },
+      {
+        "id": "video-sinematik",
+        "title": "Sinematik",
+        "price": "₺22.000",
+        "priceUnit": "/gün",
+        "features": [
+          "8-10 dakika sinematik film",
+          "Profesyonel müzik",
+          "Drone çekimi",
+          "Ham kayıtlar",
+          "Online teslimat"
+        ],
+        "buttonText": "Teklif Al",
+        "featured": true,
+        "badge": null
+      },
+      {
+        "id": "foto-video",
+        "title": "Foto + Video",
+        "price": "₺40.000",
+        "priceUnit": "/gün",
+        "features": [
+          "Fotoğraf + video kombine",
+          "İndirimli paket fiyatı",
+          "Tüm özellikler dahil"
+        ],
+        "buttonText": "Teklif Al",
+        "featured": false,
+        "badge": null
+      }
+    ]
+  },
+  "organizasyon": {
+    "label": "Organizasyon",
+    "cards": [
+      {
+        "title": "Nişan / İsteme",
+        "description": "Nişan ve isteme törenleriniz için özel paketler. Başlangıç fiyatı ₺8.000.",
+        "buttonText": "Detaylı Bilgi"
+      },
+      {
+        "title": "Koordinasyon Desteği",
+        "description": "Düğün planlaması ve gün içi koordinasyon desteği. Paketlere göre değişir.",
+        "buttonText": "Detaylı Bilgi"
+      }
+    ]
+  }
+}

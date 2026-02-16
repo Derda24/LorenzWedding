@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Fotoğraflarım | LORENZ</title>
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    .customer-panel { max-width: 60rem; margin: 0 auto; padding: 2rem; }
+    .customer-panel__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .customer-panel__title { font-size: 1.25rem; font-weight: 600; }
+    .customer-panel__logout { padding: 0.5rem 1rem; border: 1px solid var(--color-black); background: transparent; cursor: pointer; font-size: 0.85rem; text-decoration: none; color: var(--color-black); }
+    .customer-panel__logout:hover { background: var(--color-black); color: var(--color-white); }
+    .customer-panel__intro { font-size: 0.9rem; color: var(--color-grey); margin-bottom: 1.5rem; }
+    .customer-panel__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+    .customer-panel__photo { position: relative; aspect-ratio: 1; overflow: hidden; border: 2px solid transparent; cursor: pointer; }
+    .customer-panel__photo.selected { border-color: var(--color-black); }
+    .customer-panel__photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .customer-panel__photo .tick { position: absolute; top: 0.5rem; right: 0.5rem; width: 1.5rem; height: 1.5rem; background: var(--color-black); color: var(--color-white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+    .customer-panel__actions { margin-top: 2rem; display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+    .customer-panel__count { font-size: 0.9rem; color: var(--color-grey); }
+    .customer-panel .btn { padding: 0.75rem 1.5rem; }
+    .customer-panel__message { padding: 1rem; margin: 1rem 0; border-radius: 4px; font-size: 0.9rem; }
+    .customer-panel__message.success { background: #e8f5e9; color: #2e7d32; }
+    .customer-panel__message.error { background: #ffebee; color: #c62828; }
+    .customer-panel__empty { text-align: center; padding: 3rem; color: var(--color-grey); }
+    .customer-panel__photo:hover { opacity: 0.9; }
+    .customer-panel__photo img { transition: transform 0.2s ease; }
+    .customer-panel__photo:hover img { transform: scale(1.05); }
+    
+    /* Lightbox */
+    .lightbox { position: fixed; inset: 0; z-index: 10000; background: rgba(0, 0, 0, 0.95); display: none; align-items: center; justify-content: center; padding: 2rem; }
+    .lightbox.is-open { display: flex; }
+    .lightbox__close { position: absolute; top: 1.5rem; right: 1.5rem; width: 2.5rem; height: 2.5rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: var(--color-white); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: background 0.2s; }
+    .lightbox__close:hover { background: rgba(255, 255, 255, 0.2); }
+    .lightbox__image { max-width: 90vw; max-height: 90vh; object-fit: contain; }
+    .lightbox__nav { position: absolute; top: 50%; transform: translateY(-50%); width: 3rem; height: 3rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: var(--color-white); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; transition: background 0.2s; }
+    .lightbox__nav:hover { background: rgba(255, 255, 255, 0.2); }
+    .lightbox__nav--prev { left: 1.5rem; }
+    .lightbox__nav--next { right: 1.5rem; }
+    .lightbox__nav:disabled { opacity: 0.3; cursor: not-allowed; }
+    .lightbox__info { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); color: var(--color-white); font-size: 0.9rem; text-align: center; }
+    .lightbox__select { position: absolute; top: 1.5rem; left: 1.5rem; padding: 0.5rem 1rem; background: rgba(0, 0, 0, 0.6); border: 2px solid var(--color-white); color: var(--color-white); cursor: pointer; font-size: 0.85rem; transition: background 0.2s; }
+    .lightbox__select:hover { background: rgba(0, 0, 0, 0.8); }
+    .lightbox__select.selected { background: var(--color-white); color: var(--color-black); }
+  </style>
+</head>
+<body class="zara-body">
+  <main class="customer-panel">
+    <div class="customer-panel__header">
+      <h1 class="customer-panel__title">Fotoğraflarım</h1>
+      <a href="#" id="customer-logout" class="customer-panel__logout">Çıkış</a>
+    </div>
+    <p class="customer-panel__intro" id="panel-intro">Beğendiğiniz fotoğrafları işaretleyin, ardından "Seçimimi onayla" ile onaylayın. Lorenz Wedding bu onaylı fotoğrafları kullanacaktır.</p>
+    <div id="panel-message"></div>
+    <div id="panel-approved" style="display: none;" class="customer-panel__message success">Seçiminiz onaylandı. Teşekkür ederiz.</div>
+    <div id="panel-grid" class="customer-panel__grid"></div>
+    <div id="panel-empty" class="customer-panel__empty" style="display: none;">Henüz fotoğraf yüklenmemiş. Lorenz Wedding ile iletişime geçin.</div>
+    <div class="customer-panel__actions" id="panel-actions" style="display: none;">
+      <span class="customer-panel__count" id="selection-count">0 fotoğraf seçildi</span>
+      <button type="button" class="btn btn--accent" id="btn-save-selection">Seçimi kaydet</button>
+      <button type="button" class="btn" id="btn-approve" style="border: 1px solid var(--color-black); background: transparent;">Seçimimi onayla</button>
+    </div>
+  </main>
+
+  <!-- Lightbox for viewing photos larger -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-label="Fotoğraf görüntüleme" aria-hidden="true">
+    <button class="lightbox__close" id="lightbox-close" aria-label="Kapat">&times;</button>
+    <button class="lightbox__nav lightbox__nav--prev" id="lightbox-prev" aria-label="Önceki fotoğraf">‹</button>
+    <button class="lightbox__nav lightbox__nav--next" id="lightbox-next" aria-label="Sonraki fotoğraf">›</button>
+    <img class="lightbox__image" id="lightbox-image" src="" alt="">
+    <button class="lightbox__select" id="lightbox-select">Seç</button>
+    <div class="lightbox__info" id="lightbox-info"></div>
+  </div>
+  <script>
+    (function () {
+      var selectedIds = [];
+      var approvedAt = null;
+      var allPhotos = [];
+      var currentLightboxIndex = -1;
+
+      function showMessage(text, type) {
+        var el = document.getElementById('panel-message');
+        el.textContent = text;
+        el.className = 'customer-panel__message ' + (type || 'success');
+        el.style.display = 'block';
+        setTimeout(function () { el.style.display = 'none'; }, 4000);
+      }
+
+      function loadAlbum() {
+        fetch('/api/customer/album', { credentials: 'include' })
+          .then(function (r) {
+            if (r.status === 401) {
+              window.location.href = 'customer-login.html';
+              return;
+            }
+            return r.json();
+          })
+          .then(function (data) {
+            if (!data) return;
+            approvedAt = data.approvedAt || null;
+            if (data.approvedAt) {
+              document.getElementById('panel-approved').style.display = 'block';
+              document.getElementById('btn-approve').style.display = 'none';
+            }
+            if (!data.photos || data.photos.length === 0) {
+              document.getElementById('panel-grid').style.display = 'none';
+              document.getElementById('panel-empty').style.display = 'block';
+              document.getElementById('panel-actions').style.display = 'none';
+              return;
+            }
+            allPhotos = data.photos;
+            selectedIds = data.selectedIds || [];
+            var grid = document.getElementById('panel-grid');
+            grid.innerHTML = allPhotos.map(function (p, idx) {
+              var sel = selectedIds.indexOf(p.id) !== -1 ? ' selected' : '';
+              return '<div class="customer-panel__photo' + sel + '" data-id="' + p.id + '" data-index="' + idx + '" role="button" tabindex="0">' +
+                '<img src="' + p.url + '" alt="" loading="lazy">' +
+                (sel ? '<span class="tick">✓</span>' : '') +
+                '</div>';
+            }).join('');
+            document.getElementById('panel-actions').style.display = 'flex';
+            updateCount();
+            grid.querySelectorAll('.customer-panel__photo').forEach(function (el) {
+              el.addEventListener('click', function (e) {
+                openLightbox(Number(el.dataset.index));
+              });
+            });
+          });
+      }
+
+      function updateCount() {
+        document.getElementById('selection-count').textContent = selectedIds.length + ' fotoğraf seçildi';
+      }
+
+      function openLightbox(index) {
+        if (index < 0 || index >= allPhotos.length) return;
+        currentLightboxIndex = index;
+        var photo = allPhotos[index];
+        var lightbox = document.getElementById('lightbox');
+        var img = document.getElementById('lightbox-image');
+        var info = document.getElementById('lightbox-info');
+        img.src = photo.url;
+        info.textContent = (index + 1) + ' / ' + allPhotos.length;
+        lightbox.classList.add('is-open');
+        lightbox.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        updateLightboxSelect();
+        updateLightboxNav();
+      }
+
+      function closeLightbox() {
+        var lightbox = document.getElementById('lightbox');
+        lightbox.classList.remove('is-open');
+        lightbox.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        currentLightboxIndex = -1;
+      }
+
+      function updateLightboxSelect() {
+        if (currentLightboxIndex < 0) return;
+        var photo = allPhotos[currentLightboxIndex];
+        var btn = document.getElementById('lightbox-select');
+        var isSelected = selectedIds.indexOf(photo.id) !== -1;
+        btn.classList.toggle('selected', isSelected);
+        btn.textContent = isSelected ? 'Seçildi ✓' : 'Seç';
+        if (approvedAt) btn.style.display = 'none';
+        else btn.style.display = 'block';
+      }
+
+      function updateLightboxNav() {
+        document.getElementById('lightbox-prev').disabled = currentLightboxIndex <= 0;
+        document.getElementById('lightbox-next').disabled = currentLightboxIndex >= allPhotos.length - 1;
+      }
+
+      function lightboxPrev() {
+        if (currentLightboxIndex > 0) openLightbox(currentLightboxIndex - 1);
+      }
+
+      function lightboxNext() {
+        if (currentLightboxIndex < allPhotos.length - 1) openLightbox(currentLightboxIndex + 1);
+      }
+
+      document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+      document.getElementById('lightbox-prev').addEventListener('click', lightboxPrev);
+      document.getElementById('lightbox-next').addEventListener('click', lightboxNext);
+      document.getElementById('lightbox-select').addEventListener('click', function () {
+        if (approvedAt || currentLightboxIndex < 0) return;
+        var photo = allPhotos[currentLightboxIndex];
+        var id = photo.id;
+        var idx = selectedIds.indexOf(id);
+        if (idx === -1) selectedIds.push(id);
+        else selectedIds.splice(idx, 1);
+        updateLightboxSelect();
+        updateCount();
+        var gridEl = document.querySelector('[data-id="' + id + '"]');
+        if (gridEl) {
+          gridEl.classList.toggle('selected', selectedIds.indexOf(id) !== -1);
+          var tick = gridEl.querySelector('.tick');
+          if (selectedIds.indexOf(id) !== -1) {
+            if (!tick) gridEl.insertAdjacentHTML('beforeend', '<span class="tick">✓</span>');
+          } else if (tick) tick.remove();
+        }
+      });
+      document.getElementById('lightbox').addEventListener('click', function (e) {
+        if (e.target === this || e.target.id === 'lightbox-image') closeLightbox();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (!document.getElementById('lightbox').classList.contains('is-open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        else if (e.key === 'ArrowLeft') lightboxPrev();
+        else if (e.key === 'ArrowRight') lightboxNext();
+      });
+
+      document.getElementById('btn-save-selection').addEventListener('click', function () {
+        fetch('/api/customer/selection', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ photoIds: selectedIds })
+        }).then(function (r) {
+          if (r.ok) showMessage('Seçim kaydedildi.');
+          else showMessage('Kaydedilemedi.', 'error');
+        }).catch(function () { showMessage('Bağlantı hatası.', 'error'); });
+      });
+
+      document.getElementById('btn-approve').addEventListener('click', function () {
+        if (selectedIds.length === 0) {
+          showMessage('En az bir fotoğraf seçin.', 'error');
+          return;
+        }
+        fetch('/api/customer/selection', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ photoIds: selectedIds })
+        }).then(function () {
+          return fetch('/api/customer/approve', { method: 'POST', credentials: 'include' });
+        }).then(function (r) {
+          if (r.ok) {
+            document.getElementById('panel-approved').style.display = 'block';
+            document.getElementById('btn-approve').style.display = 'none';
+            showMessage('Seçiminiz onaylandı. Teşekkür ederiz.');
+          } else {
+            showMessage('Onaylama başarısız.', 'error');
+          }
+        }).catch(function () { showMessage('Bağlantı hatası.', 'error'); });
+      });
+
+      document.getElementById('customer-logout').addEventListener('click', function (e) {
+        e.preventDefault();
+        fetch('/api/customer-logout', { method: 'POST', credentials: 'include' }).then(function () {
+          window.location.href = 'customer-login.html';
+        });
+      });
+
+      loadAlbum();
+    })();
+  </script>
+</body>
+</html>
