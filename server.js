@@ -328,6 +328,22 @@ app.get('/', function (req, res) {
 // Note: Static file serving via express.static() above handles all static files including index.html
 // The root route '/' will be handled by express.static() automatically due to index: 'index.html'
 
+// Log startup info when loaded as module (for Vercel)
+if (require.main !== module) {
+  console.log('Server.js loaded as module');
+  console.log('__dirname:', __dirname);
+  console.log('process.cwd():', process.cwd());
+  const indexPath = path.join(staticDir, 'index.html');
+  console.log('index.html path:', indexPath);
+  console.log('index.html exists:', fs.existsSync(indexPath));
+  try {
+    const files = fs.readdirSync(staticDir);
+    console.log('Files in staticDir (first 20):', files.slice(0, 20));
+  } catch (e) {
+    console.error('Cannot read staticDir:', e.message);
+  }
+}
+
 // Only start server if running directly (not imported as module)
 if (require.main === module) {
   app.listen(PORT, async function () {
