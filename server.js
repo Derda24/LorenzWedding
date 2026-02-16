@@ -306,18 +306,39 @@ app.get('/', function (req, res) {
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
     } else {
-      console.error('index.html not found at:', indexPath);
-      console.error('__dirname:', __dirname);
-      console.error('process.cwd():', process.cwd());
-      console.error('staticDir:', staticDir);
-      // List files in staticDir for debugging
-      try {
-        const files = fs.readdirSync(staticDir);
-        console.error('Files in staticDir:', files.slice(0, 20));
-      } catch (e) {
-        console.error('Cannot read staticDir:', e.message);
+      // Try alternative paths
+      const altPaths = [
+        path.join(__dirname, 'index.html'),
+        path.join(process.cwd(), 'index.html'),
+        path.join(__dirname, '..', 'index.html')
+      ];
+      
+      let found = false;
+      for (const altPath of altPaths) {
+        if (fs.existsSync(altPath)) {
+          console.log('Found index.html at alternative path:', altPath);
+          res.sendFile(altPath);
+          found = true;
+          break;
+        }
       }
-      res.status(404).send('Not Found - index.html not found');
+      
+      if (!found) {
+        console.error('index.html not found at any path');
+        console.error('Tried:', indexPath);
+        console.error('Alternative paths:', altPaths);
+        console.error('__dirname:', __dirname);
+        console.error('process.cwd():', process.cwd());
+        console.error('staticDir:', staticDir);
+        // List files in staticDir for debugging
+        try {
+          const files = fs.readdirSync(staticDir);
+          console.error('Files in staticDir:', files.slice(0, 20));
+        } catch (e) {
+          console.error('Cannot read staticDir:', e.message);
+        }
+        res.status(404).send('Not Found - index.html not found. Check function logs for details.');
+      }
     }
   } catch (err) {
     console.error('Error serving index.html:', err);
