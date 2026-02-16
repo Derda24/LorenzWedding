@@ -21,11 +21,34 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 app.use(express.json({ limit: '50mb' }));
 
+// Determine the correct base directory for static files
+// On Vercel serverless, __dirname in server.js should be the project root
+// (since api/index.js requires '../server'), but let's be safe
+const isVercel = process.env.VERCEL || process.env.VERCEL_ENV;
+// Try multiple possible paths
+let staticDir = __dirname;
+if (isVercel) {
+  // On Vercel, check if we need to adjust the path
+  const possiblePaths = [
+    __dirname, // Project root (most likely)
+    path.join(__dirname, '..'), // One level up
+    process.cwd() // Current working directory
+  ];
+  // Use the first path that contains index.html
+  for (const testPath of possiblePaths) {
+    if (fs.existsSync(path.join(testPath, 'index.html'))) {
+      staticDir = testPath;
+      break;
+    }
+  }
+}
+
 // Serve static files (works both locally and on Vercel)
-// This must come before API routes so static files are served first
-app.use(express.static(__dirname, {
+// On Vercel, this serves files that weren't matched by the filesystem handler
+app.use(express.static(staticDir, {
   index: 'index.html',
-  extensions: ['html']
+  extensions: ['html'],
+  fallthrough: true
 }));
 
 app.use(session({
@@ -264,7 +287,27 @@ app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), 
   }
 });
 
-app.use('/uploads', express.static(UPLOADS_DIR));
+// Serve uploads directory
+const uploadsStaticDir = isVercel ? path.join(__dirname, '..', 'uploads') : UPLOADS_DIR;
+app.use('/uploads', express.static(uploadsStaticDir));
+
+// Serve index.html for root path (fallback if Vercel filesystem doesn't serve it)
+app.get('/', function (req, res) {
+  const indexPath = path.join(staticDir, 'index.html');
+  try {
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error('index.html not found at:', indexPath);
+      console.error('__dirname:', __dirname);
+      console.error('process.cwd():', process.cwd());
+      res.status(404).send('Not Found - index.html not found');
+    }
+  } catch (err) {
+    console.error('Error serving index.html:', err);
+    res.status(500).send('Server Error');
+  }
+});
 
 // Note: Static file serving via express.static() above handles all static files including index.html
 // The root route '/' will be handled by express.static() automatically due to index: 'index.html'
