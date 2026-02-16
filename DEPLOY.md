@@ -22,6 +22,23 @@
    vercel --prod
    ```
 
+## Important: Node.js Version Fix
+
+**If you get `better-sqlite3` compilation errors:**
+
+The build is failing because Vercel uses Node.js 24 by default, but `better-sqlite3` needs Node.js 20.
+
+**Fix in Vercel Dashboard:**
+1. Go to your project → **Settings** → **General**
+2. Under **Node.js Version**, select **20.x**
+3. Redeploy
+
+Or set it via Vercel CLI:
+```bash
+vercel env add NODE_VERSION production
+# Enter: 20
+```
+
 ## Important Notes
 
 ⚠️ **Current Limitations on Vercel:**
