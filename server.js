@@ -35,23 +35,26 @@ try {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const isVercelEnv = process.env.VERCEL || process.env.VERCEL_ENV;
 const DATA_DIR = path.join(__dirname, 'data');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'lorenz-admin-secret-change-me';
 
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+// Only create directories locally (not on Vercel - read-only filesystem)
+if (!isVercelEnv) {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
 
 app.use(express.json({ limit: '50mb' }));
 
 // Determine the correct base directory for static files
 // When api/index.js requires '../server', __dirname in server.js is the project root
 // But on Vercel, we need to verify the path
-const isVercel = process.env.VERCEL || process.env.VERCEL_ENV;
 let staticDir = __dirname;
 
 // On Vercel, verify and find the correct path
-if (isVercel) {
+if (isVercelEnv) {
   const possiblePaths = [
     __dirname, // Project root (most likely - when required from api/index.js)
     path.join(__dirname, '..'), // One level up (if __dirname is api/)
@@ -90,7 +93,10 @@ app.use(session({
 }));
 
 function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  // Only create directory locally (not on Vercel)
+  if (!isVercelEnv && !fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
 }
 
 function adminAuth(req, res, next) {
@@ -320,9 +326,9 @@ app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), 
 
 // Serve uploads directory (only if directory exists or can be created)
 try {
-  const uploadsStaticDir = isVercel ? path.join(__dirname, '..', 'uploads') : UPLOADS_DIR;
+  const uploadsStaticDir = isVercelEnv ? path.join(__dirname, '..', 'uploads') : UPLOADS_DIR;
   // Don't fail if uploads directory doesn't exist
-  if (fs.existsSync(uploadsStaticDir) || !isVercel) {
+  if (fs.existsSync(uploadsStaticDir) || !isVercelEnv) {
     app.use('/uploads', express.static(uploadsStaticDir));
   }
 } catch (err) {
