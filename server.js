@@ -8,7 +8,30 @@ const fs = require('fs');
 const session = require('express-session');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
-const db = require('./db');
+let db;
+try {
+  db = require('./db');
+} catch (error) {
+  console.error('Failed to load database module:', error);
+  console.error('Error stack:', error.stack);
+  // Create a dummy db object to prevent crashes
+  db = {
+    getDb: () => null,
+    initSchema: () => Promise.resolve(),
+    createCustomer: () => Promise.reject(new Error('Database not initialized')),
+    getCustomerById: () => Promise.resolve(null),
+    getCustomerByUsername: () => Promise.resolve(null),
+    createAlbum: () => Promise.reject(new Error('Database not initialized')),
+    getAlbumByCustomerId: () => Promise.resolve(null),
+    getAlbumById: () => Promise.resolve(null),
+    addPhoto: () => Promise.reject(new Error('Database not initialized')),
+    getPhotosByAlbumId: () => Promise.resolve([]),
+    setAlbumSelection: () => Promise.reject(new Error('Database not initialized')),
+    approveAlbum: () => Promise.reject(new Error('Database not initialized')),
+    getAllCustomers: () => Promise.resolve([]),
+    getAlbumsByCustomerId: () => Promise.resolve([])
+  };
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -295,9 +318,16 @@ app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), 
   }
 });
 
-// Serve uploads directory
-const uploadsStaticDir = isVercel ? path.join(__dirname, '..', 'uploads') : UPLOADS_DIR;
-app.use('/uploads', express.static(uploadsStaticDir));
+// Serve uploads directory (only if directory exists or can be created)
+try {
+  const uploadsStaticDir = isVercel ? path.join(__dirname, '..', 'uploads') : UPLOADS_DIR;
+  // Don't fail if uploads directory doesn't exist
+  if (fs.existsSync(uploadsStaticDir) || !isVercel) {
+    app.use('/uploads', express.static(uploadsStaticDir));
+  }
+} catch (err) {
+  console.warn('Could not set up uploads directory:', err.message);
+}
 
 // Explicit root route handler (express.static should handle this, but be explicit)
 app.get('/', function (req, res) {
