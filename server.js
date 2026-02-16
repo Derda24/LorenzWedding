@@ -53,37 +53,52 @@ app.use(express.json({ limit: '50mb' }));
 // But on Vercel, we need to verify the path
 let staticDir = __dirname;
 
-// On Vercel, verify and find the correct path
-if (isVercelEnv) {
-  const possiblePaths = [
-    __dirname, // Project root (most likely - when required from api/index.js)
-    path.join(__dirname, '..'), // One level up (if __dirname is api/)
-    process.cwd() // Current working directory
-  ];
-  
-  // Find the path that contains index.html
-  for (const testPath of possiblePaths) {
-    const indexPath = path.join(testPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      staticDir = testPath;
-      console.log('Found static files at:', staticDir);
-      break;
+try {
+  // On Vercel, verify and find the correct path
+  if (isVercelEnv) {
+    const possiblePaths = [
+      __dirname, // Project root (most likely - when required from api/index.js)
+      path.join(__dirname, '..'), // One level up (if __dirname is api/)
+      process.cwd() // Current working directory
+    ];
+    
+    // Find the path that contains index.html
+    for (const testPath of possiblePaths) {
+      try {
+        const indexPath = path.join(testPath, 'index.html');
+        if (fs.existsSync(indexPath)) {
+          staticDir = testPath;
+          console.log('Found static files at:', staticDir);
+          break;
+        }
+      } catch (e) {
+        console.warn('Error checking path:', testPath, e.message);
+      }
+    }
+    
+    // Log for debugging
+    console.log('Vercel static file detection:');
+    console.log('  __dirname:', __dirname);
+    console.log('  process.cwd():', process.cwd());
+    console.log('  Using staticDir:', staticDir);
+    try {
+      console.log('  index.html exists:', fs.existsSync(path.join(staticDir, 'index.html')));
+    } catch (e) {
+      console.warn('  Cannot check index.html:', e.message);
     }
   }
-  
-  // Log for debugging
-  console.log('Vercel static file detection:');
-  console.log('  __dirname:', __dirname);
-  console.log('  process.cwd():', process.cwd());
-  console.log('  Using staticDir:', staticDir);
-  console.log('  index.html exists:', fs.existsSync(path.join(staticDir, 'index.html')));
-}
 
-// Serve static files (works both locally and on Vercel)
-app.use(express.static(staticDir, {
-  index: 'index.html',
-  extensions: ['html']
-}));
+  // Serve static files (works both locally and on Vercel)
+  app.use(express.static(staticDir, {
+    index: 'index.html',
+    extensions: ['html']
+  }));
+  console.log('Static file middleware configured for:', staticDir);
+} catch (error) {
+  console.error('Error setting up static file serving:', error);
+  console.error('Error stack:', error.stack);
+  // Continue anyway - routes might still work
+}
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'lorenz-session-secret',
@@ -337,48 +352,55 @@ try {
 
 // Explicit root route handler (express.static should handle this, but be explicit)
 app.get('/', function (req, res) {
-  const indexPath = path.join(staticDir, 'index.html');
   try {
+    const indexPath = path.join(staticDir, 'index.html');
     if (fs.existsSync(indexPath)) {
       res.sendFile(indexPath);
-    } else {
-      // Try alternative paths
-      const altPaths = [
-        path.join(__dirname, 'index.html'),
-        path.join(process.cwd(), 'index.html'),
-        path.join(__dirname, '..', 'index.html')
-      ];
-      
-      let found = false;
-      for (const altPath of altPaths) {
+      return;
+    }
+    
+    // Try alternative paths
+    const altPaths = [
+      path.join(__dirname, 'index.html'),
+      path.join(process.cwd(), 'index.html'),
+      path.join(__dirname, '..', 'index.html')
+    ];
+    
+    for (const altPath of altPaths) {
+      try {
         if (fs.existsSync(altPath)) {
           console.log('Found index.html at alternative path:', altPath);
           res.sendFile(altPath);
-          found = true;
-          break;
+          return;
         }
-      }
-      
-      if (!found) {
-        console.error('index.html not found at any path');
-        console.error('Tried:', indexPath);
-        console.error('Alternative paths:', altPaths);
-        console.error('__dirname:', __dirname);
-        console.error('process.cwd():', process.cwd());
-        console.error('staticDir:', staticDir);
-        // List files in staticDir for debugging
-        try {
-          const files = fs.readdirSync(staticDir);
-          console.error('Files in staticDir:', files.slice(0, 20));
-        } catch (e) {
-          console.error('Cannot read staticDir:', e.message);
-        }
-        res.status(404).send('Not Found - index.html not found. Check function logs for details.');
+      } catch (e) {
+        console.warn('Error checking alternative path:', altPath, e.message);
       }
     }
+    
+    // If not found, log details and return 404
+    console.error('index.html not found at any path');
+    console.error('Tried:', indexPath);
+    console.error('Alternative paths:', altPaths);
+    console.error('__dirname:', __dirname);
+    console.error('process.cwd():', process.cwd());
+    console.error('staticDir:', staticDir);
+    
+    // List files in staticDir for debugging
+    try {
+      const files = fs.readdirSync(staticDir);
+      console.error('Files in staticDir:', files.slice(0, 20));
+    } catch (e) {
+      console.error('Cannot read staticDir:', e.message);
+    }
+    
+    res.status(404).send('Not Found - index.html not found. Check function logs for details.');
   } catch (err) {
     console.error('Error serving index.html:', err);
-    res.status(500).send('Server Error');
+    console.error('Error stack:', err.stack);
+    if (!res.headersSent) {
+      res.status(500).send('Server Error: ' + err.message);
+    }
   }
 });
 
