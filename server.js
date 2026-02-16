@@ -408,36 +408,46 @@ try {
 // Helper function to serve HTML files
 function serveHtmlFile(filename, req, res) {
   try {
-    const filePath = path.join(staticDir, filename);
-    if (fs.existsSync(filePath)) {
-      res.sendFile(filePath);
-      return;
-    }
-    
-    // Try alternative paths
-    const altPaths = [
-      path.join(__dirname, filename),
-      path.join(process.cwd(), filename),
-      path.join(__dirname, '..', filename)
+    // On Vercel, __dirname in server.js is the project root (when required from api/index.js)
+    // Try multiple possible paths
+    const possiblePaths = [
+      path.join(__dirname, filename), // Project root (most likely)
+      path.join(staticDir, filename), // Detected static dir
+      path.join(process.cwd(), filename), // Current working directory
+      path.join(__dirname, '..', filename) // One level up
     ];
     
-    for (const altPath of altPaths) {
+    console.log(`Attempting to serve ${filename}`);
+    console.log('  __dirname:', __dirname);
+    console.log('  staticDir:', staticDir);
+    console.log('  process.cwd():', process.cwd());
+    
+    // Try each path
+    for (const filePath of possiblePaths) {
       try {
-        if (fs.existsSync(altPath)) {
-          console.log(`Found ${filename} at alternative path:`, altPath);
-          res.sendFile(altPath);
+        if (fs.existsSync(filePath)) {
+          console.log(`✓ Found ${filename} at:`, filePath);
+          res.sendFile(filePath);
           return;
+        } else {
+          console.log(`✗ Not found:`, filePath);
         }
       } catch (e) {
-        console.warn(`Error checking alternative path for ${filename}:`, altPath, e.message);
+        console.warn(`Error checking ${filePath}:`, e.message);
       }
+    }
+    
+    // If not found, list available files in __dirname for debugging
+    try {
+      const files = fs.readdirSync(__dirname);
+      console.error(`Available files in __dirname (${__dirname}):`, files.filter(f => f.endsWith('.html')).slice(0, 10));
+    } catch (e) {
+      console.error('Cannot read __dirname:', e.message);
     }
     
     // If not found, log details and return 404
     console.error(`${filename} not found at any path`);
-    console.error('Tried:', filePath);
-    console.error('Alternative paths:', altPaths);
-    console.error('staticDir:', staticDir);
+    console.error('Tried paths:', possiblePaths);
     
     res.status(404).send(`Not Found - ${filename} not found. Check function logs for details.`);
   } catch (err) {
