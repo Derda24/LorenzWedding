@@ -22,33 +22,41 @@ if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use(express.json({ limit: '50mb' }));
 
 // Determine the correct base directory for static files
-// On Vercel serverless, __dirname in server.js should be the project root
-// (since api/index.js requires '../server'), but let's be safe
+// When api/index.js requires '../server', __dirname in server.js is the project root
+// But on Vercel, we need to verify the path
 const isVercel = process.env.VERCEL || process.env.VERCEL_ENV;
-// Try multiple possible paths
 let staticDir = __dirname;
+
+// On Vercel, verify and find the correct path
 if (isVercel) {
-  // On Vercel, check if we need to adjust the path
   const possiblePaths = [
-    __dirname, // Project root (most likely)
-    path.join(__dirname, '..'), // One level up
+    __dirname, // Project root (most likely - when required from api/index.js)
+    path.join(__dirname, '..'), // One level up (if __dirname is api/)
     process.cwd() // Current working directory
   ];
-  // Use the first path that contains index.html
+  
+  // Find the path that contains index.html
   for (const testPath of possiblePaths) {
-    if (fs.existsSync(path.join(testPath, 'index.html'))) {
+    const indexPath = path.join(testPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
       staticDir = testPath;
+      console.log('Found static files at:', staticDir);
       break;
     }
   }
+  
+  // Log for debugging
+  console.log('Vercel static file detection:');
+  console.log('  __dirname:', __dirname);
+  console.log('  process.cwd():', process.cwd());
+  console.log('  Using staticDir:', staticDir);
+  console.log('  index.html exists:', fs.existsSync(path.join(staticDir, 'index.html')));
 }
 
 // Serve static files (works both locally and on Vercel)
-// On Vercel, this serves files that weren't matched by the filesystem handler
 app.use(express.static(staticDir, {
   index: 'index.html',
-  extensions: ['html'],
-  fallthrough: true
+  extensions: ['html']
 }));
 
 app.use(session({
@@ -291,7 +299,7 @@ app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), 
 const uploadsStaticDir = isVercel ? path.join(__dirname, '..', 'uploads') : UPLOADS_DIR;
 app.use('/uploads', express.static(uploadsStaticDir));
 
-// Serve index.html for root path (fallback if Vercel filesystem doesn't serve it)
+// Explicit root route handler (express.static should handle this, but be explicit)
 app.get('/', function (req, res) {
   const indexPath = path.join(staticDir, 'index.html');
   try {
@@ -301,6 +309,14 @@ app.get('/', function (req, res) {
       console.error('index.html not found at:', indexPath);
       console.error('__dirname:', __dirname);
       console.error('process.cwd():', process.cwd());
+      console.error('staticDir:', staticDir);
+      // List files in staticDir for debugging
+      try {
+        const files = fs.readdirSync(staticDir);
+        console.error('Files in staticDir:', files.slice(0, 20));
+      } catch (e) {
+        console.error('Cannot read staticDir:', e.message);
+      }
       res.status(404).send('Not Found - index.html not found');
     }
   } catch (err) {
