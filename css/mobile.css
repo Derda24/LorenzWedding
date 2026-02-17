@@ -1,0 +1,403 @@
+/**
+ * Mobile Responsive Styles
+ * LORENZWED Photo & Film
+ */
+
+/* Mobile-first breakpoints */
+@media (max-width: 768px) {
+  /* Container padding reduction */
+  .container {
+    padding-inline: var(--space-4);
+  }
+
+  /* Section spacing reduction */
+  .section {
+    padding-block: var(--space-12);
+  }
+
+  .section--lg {
+    padding-block: var(--space-16);
+  }
+
+  /* Grid adjustments */
+  .grid--2,
+  .grid--3,
+  .grid--4 {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  /* Typography adjustments */
+  .section-header {
+    margin-bottom: var(--space-8);
+  }
+
+  /* Button sizes */
+  .btn {
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--text-sm);
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .btn--small {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+    width: auto;
+  }
+
+  /* Form inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: var(--space-3) var(--space-4);
+  }
+
+  textarea {
+    min-height: 6rem;
+  }
+
+  /* Card adjustments */
+  .card__content {
+    padding: var(--space-4);
+  }
+
+  /* Customer Panel Mobile Styles */
+  .customer-panel {
+    padding: var(--space-4);
+  }
+
+  .customer-panel__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .customer-panel__title {
+    font-size: var(--text-lg);
+  }
+
+  .customer-panel__grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .customer-panel__actions {
+    flex-direction: column;
+    width: 100%;
+    gap: var(--space-3);
+  }
+
+  .customer-panel__actions .btn {
+    width: 100%;
+  }
+
+  .customer-panel__count {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Lightbox mobile optimization */
+  .lightbox {
+    padding: var(--space-2);
+  }
+
+  .lightbox__image {
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+
+  .lightbox__close {
+    top: var(--space-2);
+    right: var(--space-2);
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.25rem;
+  }
+
+  .lightbox__nav {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1rem;
+  }
+
+  .lightbox__nav--prev {
+    left: var(--space-2);
+  }
+
+  .lightbox__nav--next {
+    right: var(--space-2);
+  }
+
+  .lightbox__select {
+    top: var(--space-2);
+    left: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  .lightbox__info {
+    bottom: var(--space-3);
+    font-size: var(--text-xs);
+  }
+
+  /* Admin Panel Mobile Styles */
+  .admin {
+    padding: var(--space-4);
+  }
+
+  .admin h1 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-4);
+  }
+
+  .admin-section {
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .admin-header__left,
+  .admin-header__right {
+    width: 100%;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .admin-header__right .btn {
+    width: 100%;
+  }
+
+  .admin-nav {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .admin-nav a {
+    width: 100%;
+    text-align: center;
+    padding: var(--space-3);
+  }
+
+  .admin-form {
+    gap: var(--space-3);
+  }
+
+  .admin-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .admin-actions .btn {
+    width: 100%;
+  }
+
+  .admin-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-3) 0;
+  }
+
+  .admin-list .item-info {
+    width: 100%;
+  }
+
+  .admin-list .btn--small {
+    width: 100%;
+    margin-top: var(--space-2);
+  }
+
+  .services-card__row {
+    grid-template-columns: 1fr;
+  }
+
+  .services-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .services-card__actions .btn {
+    width: 100%;
+  }
+
+  .admin-login {
+    padding: var(--space-4);
+  }
+
+  .admin-login__box {
+    padding: var(--space-6);
+  }
+
+  /* Admin Customers mobile */
+  .ac {
+    padding: var(--space-4);
+  }
+
+  .ac h1 {
+    font-size: var(--text-xl);
+  }
+
+  .ac-form {
+    max-width: 100%;
+  }
+
+  .ac-list li {
+    padding: var(--space-3);
+  }
+
+  .ac-selected-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: var(--space-2);
+  }
+
+  .ac-list .album-actions {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .ac-list .album-actions input[type=file],
+  .ac-list .album-actions button {
+    width: 100%;
+  }
+
+  /* Customer Login mobile */
+  .customer-login {
+    padding: var(--space-4);
+  }
+
+  .customer-login__box {
+    padding: var(--space-6);
+  }
+
+  .customer-login input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Gallery mobile styles */
+  .gallery-filters {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .gallery-filters button {
+    width: 100%;
+  }
+
+  .gallery-item {
+    width: 100%;
+  }
+
+  /* Video grid mobile */
+  .video-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .video-item {
+    width: 100%;
+  }
+
+  /* Contact form mobile */
+  .contact-form {
+    padding: var(--space-6);
+  }
+
+  /* Footer mobile */
+  .footer__grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+    text-align: center;
+  }
+
+  /* Zara page mobile adjustments */
+  .zara-section {
+    padding: var(--space-8) 0;
+  }
+
+  .zara-hero__title {
+    font-size: clamp(1.5rem, 8vw, 2.5rem);
+  }
+
+  .zara-hero__subtitle {
+    font-size: clamp(0.875rem, 3vw, 1rem);
+  }
+}
+
+/* Small mobile devices (up to 480px) */
+@media (max-width: 480px) {
+  .container {
+    padding-inline: var(--space-3);
+  }
+
+  .customer-panel__grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: var(--space-2);
+  }
+
+  .customer-panel__photo .tick {
+    width: 1.25rem;
+    height: 1.25rem;
+    font-size: 0.65rem;
+    top: var(--space-1);
+    right: var(--space-1);
+  }
+
+  .lightbox__close,
+  .lightbox__nav {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .admin-list img {
+    width: 100%;
+    height: auto;
+    max-height: 120px;
+  }
+
+  .zara-header {
+    padding: var(--space-3);
+  }
+
+  .zara-header__right {
+    gap: var(--space-2);
+  }
+
+  .zara-overlay__content {
+    padding: var(--space-4) var(--space-3);
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .btn,
+  .customer-panel__photo,
+  .lightbox__close,
+  .lightbox__nav,
+  .lightbox__select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on touch devices */
+  .customer-panel__photo:hover img {
+    transform: none;
+  }
+
+  .card:hover .card__image img {
+    transform: none;
+  }
+
+  .btn:hover:not(:disabled) {
+    transform: none;
+  }
+}
