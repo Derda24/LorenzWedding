@@ -50,15 +50,35 @@
             password: document.getElementById('cust-password').value
           })
         }).then(function (r) {
+          console.log('[Login] Response status:', r.status, r.statusText);
+          console.log('[Login] Response headers:', r.headers);
+          
+          // Check if response has content
+          const contentType = r.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            console.error('[Login] Invalid content-type:', contentType);
+            err.textContent = 'Sunucu yanıtı geçersiz. Status: ' + r.status;
+            err.style.display = 'block';
+            return;
+          }
+          
           return r.json().then(function (data) {
-            if (r.ok) {
+            console.log('[Login] Response data:', data);
+            if (r.ok && data.ok) {
+              console.log('[Login] Login successful, redirecting...');
               window.location.href = 'customer-panel.html';
             } else {
+              console.error('[Login] Login failed:', data.error);
               err.textContent = data.error || 'Giriş başarısız.';
               err.style.display = 'block';
             }
+          }).catch(function (jsonErr) {
+            console.error('[Login] JSON parse error:', jsonErr);
+            err.textContent = 'Sunucu yanıtı okunamadı. Status: ' + r.status;
+            err.style.display = 'block';
           });
-        }).catch(function () {
+        }).catch(function (networkErr) {
+          console.error('[Login] Network error:', networkErr);
           err.textContent = 'Bağlantı hatası. Sunucu çalışıyor mu?';
           err.style.display = 'block';
         });

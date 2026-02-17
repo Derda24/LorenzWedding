@@ -268,25 +268,48 @@ app.post('/api/save-services', adminAuth, function (req, res) {
 // ---------- Customer auth ----------
 app.post('/api/customer-login', async function (req, res) {
   try {
+    console.log('[Customer Login] Request received');
     const { username, password } = req.body || {};
+    console.log('[Customer Login] Username:', username ? username.trim() : 'missing');
+    console.log('[Customer Login] Password:', password ? 'provided' : 'missing');
+    
     if (!username || !password) {
+      console.log('[Customer Login] Missing username or password');
       return res.status(400).json({ error: 'Kullanıcı adı ve şifre gerekli.' });
     }
-    const customer = await db.getCustomerByUsername(username.trim());
+    
+    const trimmedUsername = username.trim();
+    console.log('[Customer Login] Looking up customer:', trimmedUsername);
+    const customer = await db.getCustomerByUsername(trimmedUsername);
+    
     if (!customer) {
+      console.log('[Customer Login] Customer not found:', trimmedUsername);
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
     }
+    
+    console.log('[Customer Login] Customer found:', customer.id, customer.username);
+    console.log('[Customer Login] Comparing password...');
     const match = bcrypt.compareSync(password, customer.password_hash);
+    
     if (!match) {
+      console.log('[Customer Login] Password mismatch');
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
     }
+    
+    console.log('[Customer Login] Password correct, creating session...');
     req.session.customerId = customer.id;
     req.session.save(function (err) {
-      if (err) return res.status(500).json({ error: 'Oturum açılamadı.' });
+      if (err) {
+        console.error('[Customer Login] Session save error:', err);
+        return res.status(500).json({ error: 'Oturum açılamadı.' });
+      }
+      console.log('[Customer Login] Session saved successfully, customer ID:', customer.id);
       res.json({ ok: true, customer: { id: customer.id, username: customer.username, name: customer.name } });
     });
   } catch (err) {
-    res.status(500).json({ error: 'Sunucu hatası.' });
+    console.error('[Customer Login] Exception:', err);
+    console.error('[Customer Login] Stack:', err.stack);
+    res.status(500).json({ error: 'Sunucu hatası: ' + err.message });
   }
 });
 
