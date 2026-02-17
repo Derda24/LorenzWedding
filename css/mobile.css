@@ -330,6 +330,61 @@
   .zara-hero__subtitle {
     font-size: clamp(0.875rem, 3vw, 1rem);
   }
+
+  /* Zara header mobile improvements */
+  .zara-header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .zara-header__center {
+    flex: 1;
+    text-align: center;
+  }
+
+  .zara-logo__text {
+    font-size: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  /* Overlay menu mobile improvements */
+  .zara-overlay__top {
+    padding: var(--space-4) var(--space-4);
+  }
+
+  .zara-overlay__content {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .zara-overlay__col {
+    margin-bottom: var(--space-6);
+  }
+
+  .zara-overlay__col h3 {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-3);
+  }
+
+  .zara-overlay__col ul {
+    margin-bottom: var(--space-4);
+  }
+
+  .zara-overlay__col li {
+    margin-bottom: var(--space-2);
+  }
+
+  .zara-overlay__col a {
+    font-size: var(--text-sm);
+    padding: var(--space-2) 0;
+    display: block;
+  }
+
+  .zara-overlay__promo {
+    margin-bottom: var(--space-4);
+  }
+
+  .zara-overlay__promo img {
+    width: 100%;
+    height: auto;
+  }
 }
 
 /* Small mobile devices (up to 480px) */
