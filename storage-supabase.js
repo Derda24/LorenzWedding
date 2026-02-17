@@ -26,19 +26,49 @@ async function uploadJson(filename, data) {
   }
   try {
     const jsonString = JSON.stringify(data, null, 2);
-    // Convert string to Buffer (Node.js) - Supabase Storage requires Blob/Buffer, not plain string
-    const body = Buffer.from(jsonString, 'utf8');
-    console.log(`[Storage] Uploading ${filename} to bucket "${BUCKET}" (${body.length} bytes)`);
+    console.log(`[Storage] Preparing upload: ${filename} to bucket "${BUCKET}"`);
+    console.log(`[Storage] JSON string length: ${jsonString.length} bytes`);
+    console.log(`[Storage] Supabase URL: ${supabaseUrl ? 'Set' : 'Missing'}`);
+    console.log(`[Storage] Service Role Key: ${supabaseKey ? 'Set (' + supabaseKey.substring(0, 20) + '...)' : 'Missing'}`);
     
-    const { data: uploadData, error } = await supabase.storage
+    // Try multiple approaches for Node.js compatibility
+    let body;
+    if (typeof Blob !== 'undefined') {
+      // Node.js 18+ has global Blob
+      body = new Blob([jsonString], { type: 'application/json' });
+      console.log('[Storage] Using Blob for upload');
+    } else {
+      // Fallback to Buffer
+      body = Buffer.from(jsonString, 'utf8');
+      console.log('[Storage] Using Buffer for upload');
+    }
+    
+    console.log(`[Storage] Body type: ${body.constructor.name}, size: ${body.length || body.size} bytes`);
+    
+    // Try upload with upsert
+    let { data: uploadData, error } = await supabase.storage
       .from(BUCKET)
       .upload(filename, body, { contentType: 'application/json', upsert: true });
+    
+    // If upsert fails, try delete + upload
+    if (error && (error.message.includes('duplicate') || error.statusCode === 409)) {
+      console.log('[Storage] Upsert failed, trying delete then upload...');
+      // Try to remove existing file first
+      await supabase.storage.from(BUCKET).remove([filename]);
+      // Retry upload
+      const retryResult = await supabase.storage
+        .from(BUCKET)
+        .upload(filename, body, { contentType: 'application/json', upsert: true });
+      uploadData = retryResult.data;
+      error = retryResult.error;
+    }
     
     if (error) {
       console.error('[Storage] Upload error details:', JSON.stringify(error, null, 2));
       console.error('[Storage] Error message:', error.message);
       console.error('[Storage] Error statusCode:', error.statusCode);
       console.error('[Storage] Error code:', error.code);
+      console.error('[Storage] Error name:', error.name);
       
       // Check for common errors
       let errorMsg = error.message || 'Unknown storage error';
@@ -47,24 +77,33 @@ async function uploadJson(filename, data) {
       if (error.message && (error.message.includes('Bucket not found') || error.message.includes('does not exist'))) {
         errorMsg = `Bucket "${BUCKET}" bulunamadı.`;
         hint = `Supabase Dashboard → Storage → "${BUCKET}" bucket'ını oluşturun.`;
-      } else if (error.message && error.message.includes('row-level security') || error.message.includes('RLS')) {
+      } else if (error.message && (error.message.includes('row-level security') || error.message.includes('RLS') || error.message.includes('permission'))) {
         errorMsg = `Bucket "${BUCKET}" için izin sorunu.`;
-        hint = `Bucket'ı public yapın: Storage → "${BUCKET}" → Settings → Public bucket: ON`;
+        hint = `Bucket'ı public yapın: Storage → "${BUCKET}" → Settings → Public bucket: ON. Service Role Key kullanıldığından emin olun.`;
       } else if (error.statusCode === 403 || error.statusCode === 401) {
-        errorMsg = `Bucket "${BUCKET}" için yetkilendirme hatası.`;
-        hint = `SUPABASE_SERVICE_ROLE_KEY doğru mu? Bucket public mi?`;
+        errorMsg = `Bucket "${BUCKET}" için yetkilendirme hatası (${error.statusCode}).`;
+        hint = `SUPABASE_SERVICE_ROLE_KEY doğru mu? Bucket public mi? Service Role Key kullanıldığından emin olun (anon key değil).`;
       } else if (error.statusCode === 400) {
-        errorMsg = `Geçersiz istek: ${error.message}`;
-        hint = `Bucket adı ve dosya adını kontrol edin.`;
+        errorMsg = `Geçersiz istek (400): ${error.message}`;
+        hint = `Bucket adı ("${BUCKET}") ve dosya adını ("${filename}") kontrol edin.`;
+      } else if (error.statusCode === 413) {
+        errorMsg = `Dosya çok büyük (413).`;
+        hint = `Dosya boyutu limitini kontrol edin.`;
+      } else {
+        errorMsg = `Storage hatası: ${error.message || 'Bilinmeyen hata'}`;
+        hint = `Supabase Storage yapılandırmasını kontrol edin. Status: ${error.statusCode || 'N/A'}`;
       }
       
       return { ok: false, error: errorMsg, hint: hint, code: error.statusCode || error.code, rawError: error.message };
     }
     
     console.log('[Storage] Upload successful:', filename);
+    console.log('[Storage] Upload data:', JSON.stringify(uploadData, null, 2));
     return { ok: true };
   } catch (err) {
     console.error('[Storage] Upload exception:', err);
+    console.error('[Storage] Exception name:', err.name);
+    console.error('[Storage] Exception message:', err.message);
     console.error('[Storage] Exception stack:', err.stack);
     return { ok: false, error: err.message || 'Unknown error', hint: 'Supabase Storage bağlantısını kontrol edin.' };
   }
