@@ -47,6 +47,12 @@ const DATA_DIR = path.join(__dirname, 'data');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'lorenz-admin-secret-change-me';
 
+// Trust proxy for Vercel (required for cookies to work)
+if (isVercelEnv) {
+  app.set('trust proxy', 1);
+  console.log('[App] Trust proxy enabled for Vercel');
+}
+
 // Set Content Security Policy header
 app.use(function (req, res, next) {
   // CSP with Google Fonts and other external resources support
