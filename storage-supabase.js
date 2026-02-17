@@ -25,7 +25,9 @@ async function uploadJson(filename, data) {
     return { ok: false, error: 'Supabase not configured' };
   }
   try {
-    const body = JSON.stringify(data, null, 2);
+    const jsonString = JSON.stringify(data, null, 2);
+    // Convert string to Buffer (Node.js) - Supabase Storage requires Blob/Buffer, not plain string
+    const body = Buffer.from(jsonString, 'utf8');
     console.log(`[Storage] Uploading ${filename} to bucket "${BUCKET}" (${body.length} bytes)`);
     
     const { data: uploadData, error } = await supabase.storage
