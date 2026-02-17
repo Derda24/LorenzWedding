@@ -4,8 +4,10 @@ node_modules
 .env.local
 *.log
 .DS_Store
-data/
 uploads/
 *.db
 *.db-shm
 *.db-wal
+data/*.db
+data/*.db-shm
+data/*.db-wal
