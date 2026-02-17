@@ -350,15 +350,15 @@
     }
 
     function loadData() {
-      fetch('data/gallery.json')
+      fetch('/api/data/gallery.json')
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) { if (d) galleryData = d; renderPhotos(); });
 
-      fetch('data/videos.json')
+      fetch('/api/data/videos.json')
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) { if (d) videosData = d; renderVideos(); });
 
-      fetch('data/featured.json')
+      fetch('/api/data/featured.json')
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) {
           if (d) featuredData = d;
@@ -367,7 +367,7 @@
           document.getElementById('hero-title').value = h.title || '';
         });
 
-      fetch('data/services.json')
+      fetch('/api/data/services.json')
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) {
           if (d) fillServicesForm(d);

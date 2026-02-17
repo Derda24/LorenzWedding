@@ -5,7 +5,7 @@
 (function () {
   'use strict';
 
-  const DATA_BASE = 'data/';
+  const DATA_BASE = '/api/data/';
 
   /**
    * Fetch JSON with fallback

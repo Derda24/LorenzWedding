@@ -9,6 +9,12 @@ const session = require('express-session');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 let db;
+let storageSupabase;
+try {
+  storageSupabase = require('./storage-supabase');
+} catch (e) {
+  storageSupabase = null;
+}
 try {
   db = require('./db');
 } catch (error) {
@@ -146,14 +152,73 @@ function customerAuth(req, res, next) {
   res.status(401).json({ error: 'Unauthorized' });
 }
 
-// ---------- Existing content API (admin only) ----------
-// Helper: save JSON to data dir (on Vercel filesystem is read-only, so this fails)
+// ---------- Data API: serve JSON from Supabase Storage or static data/ ----------
+const ALLOWED_DATA_FILES = ['gallery.json', 'videos.json', 'featured.json', 'services.json'];
+
+app.get('/api/data/:filename', function (req, res) {
+  const filename = req.params.filename;
+  if (!ALLOWED_DATA_FILES.includes(filename)) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  (async function () {
+    if (storageSupabase && storageSupabase.isAvailable()) {
+      const { data, error } = await storageSupabase.getJson(filename);
+      if (error) {
+        console.warn('Storage getJson error:', filename, error);
+      }
+      if (data) {
+        return res.json(data);
+      }
+    }
+    const filePath = path.join(DATA_DIR, filename);
+    try {
+      if (fs.existsSync(filePath)) {
+        const raw = fs.readFileSync(filePath, 'utf8');
+        const json = JSON.parse(raw);
+        return res.json(json);
+      }
+    } catch (e) {
+      console.warn('Read data file failed:', filePath, e.message);
+    }
+    res.status(404).json({ error: 'Not found' });
+  })();
+});
+
+// ---------- Save content API (admin only) ----------
+// Saves to Supabase Storage on Vercel, or to data/ locally
 function saveJsonToData(filename, data, res) {
+  // Check if we should use Supabase Storage
+  const useStorage = isVercelEnv && storageSupabase && storageSupabase.isAvailable();
+  
+  if (useStorage) {
+    console.log('Using Supabase Storage for:', filename);
+    storageSupabase.uploadJson(filename, data).then(function (result) {
+      if (result.ok) {
+        console.log('Successfully uploaded to Storage:', filename);
+        res.json({ ok: true });
+      } else {
+        console.error('Storage upload failed:', filename, result.error);
+        res.status(500).json({ ok: false, error: result.error || 'Storage upload failed' });
+      }
+    }).catch(function (err) {
+      console.error('Save to Storage exception:', filename, err);
+      res.status(500).json({ ok: false, error: err.message });
+    });
+    return;
+  }
+  
+  // On Vercel without Storage, return helpful error
   if (isVercelEnv) {
+    const reasons = [];
+    if (!process.env.SUPABASE_URL) reasons.push('SUPABASE_URL eksik');
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) reasons.push('SUPABASE_SERVICE_ROLE_KEY eksik');
+    if (!storageSupabase) reasons.push('Storage modülü yüklenemedi');
+    if (storageSupabase && !storageSupabase.isAvailable()) reasons.push('Supabase Storage yapılandırılmamış');
+    
     return res.status(503).json({
       ok: false,
       error: 'Vercel\'de dosya yazma desteklenmiyor.',
-      hint: 'İçerik güncellemeleri için: 1) Bilgisayarınızda "npm start" çalıştırın, 2) localhost:3000/admin.html\'de kaydedin, 3) data/ klasöründeki değişiklikleri Git\'e commit edip deploy edin.'
+      hint: 'Supabase Storage kullanmak için: 1) Supabase Dashboard → Storage → "site-data" bucket oluşturun, 2) Vercel\'de SUPABASE_URL ve SUPABASE_SERVICE_ROLE_KEY environment variable\'larını kontrol edin. ' + (reasons.length > 0 ? 'Sorun: ' + reasons.join(', ') : '')
     });
   }
   try {

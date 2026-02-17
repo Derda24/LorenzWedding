@@ -30,6 +30,18 @@ This guide will help you set up Supabase as the database for your Lorenz Wedding
 5. Click **Run** (or press Ctrl+Enter)
 6. You should see "Success. No rows returned" - this means the tables were created successfully
 
+## Step 2b: Create Storage Bucket (for site content JSON)
+
+Admin panelinden Vercel'de "Siteye kaydet" ile içerik kaydedebilmek için Supabase Storage kullanılır.
+
+1. Supabase Dashboard → **Storage** (sol menü)
+2. **New bucket** tıklayın
+3. **Name**: `site-data` (tam bu isim olmalı)
+4. **Public bucket**: Kapalı bırakabilirsiniz (sunucu service role ile erişir)
+5. **Create bucket** ile oluşturun
+
+İlk kayıtta `gallery.json`, `videos.json`, `featured.json`, `services.json` dosyaları bu bucket'a yazılır; site bu dosyaları `/api/data/...` üzerinden okur.
+
 ## Step 3: Get Your Supabase Credentials
 
 1. In your Supabase project dashboard, go to **Settings** → **API** (left sidebar)
