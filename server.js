@@ -47,6 +47,21 @@ const DATA_DIR = path.join(__dirname, 'data');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'lorenz-admin-secret-change-me';
 
+// Set Content Security Policy header (relaxed for cookie-session compatibility)
+app.use(function (req, res, next) {
+  // Allow unsafe-eval for cookie-session if needed, but cookie-session shouldn't need it
+  res.setHeader('Content-Security-Policy', 
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " + // unsafe-eval for compatibility
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: https:; " +
+    "font-src 'self' data:; " +
+    "connect-src 'self'; " +
+    "frame-ancestors 'none';"
+  );
+  next();
+});
+
 // Only create directories locally (not on Vercel - read-only filesystem)
 if (!isVercelEnv) {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
