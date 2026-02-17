@@ -47,6 +47,31 @@ Admin panelinden Vercel'de "Siteye kaydet" ile içerik kaydedebilmek için Supab
 - **Public bucket** seçeneğini **ON** yapın
 - **Save** butonuna tıklayın
 
+**⚠️ RLS (Row Level Security) Politikalarını Ayarlayın:**
+
+"new row violates row-level security policy" hatası alıyorsanız, bucket için RLS politikalarını eklemeniz gerekiyor:
+
+1. Storage → `site-data` bucket → **Policies** sekmesine gidin
+2. **New Policy** butonuna tıklayın
+3. **Policy Name**: `Allow public uploads` (veya istediğiniz bir isim)
+4. **Allowed Operation**: `INSERT` seçin
+5. **Policy Definition**: Aşağıdaki SQL'i kullanın:
+   ```sql
+   true
+   ```
+   (Bu, herkesin upload yapmasına izin verir - Service Role Key ile çalışır)
+6. **Save** butonuna tıklayın
+
+**Alternatif: Tüm işlemler için policy ekleyin:**
+- **INSERT** için: `true`
+- **SELECT** için: `true` (zaten public bucket ise gerekli değil)
+- **UPDATE** için: `true`
+- **DELETE** için: `true`
+
+**Veya daha basit çözüm:**
+- Bucket → Settings → **Public bucket**: ON
+- Policies sekmesinde tüm politikaları silin (RLS'yi tamamen devre dışı bırakır)
+
 İlk kayıtta `gallery.json`, `videos.json`, `featured.json`, `services.json` dosyaları bu bucket'a yazılır; site bu dosyaları `/api/data/...` üzerinden okur.
 
 ## Step 3: Get Your Supabase Credentials
