@@ -48,6 +48,7 @@
   <main class="ac">
     <h1>Müşteriler</h1>
     <p style="font-size: 0.9rem; color: var(--color-grey); margin-bottom: 1.5rem;">Müşteri oluştur, albüm aç, fotoğraf yükle. Müşteri girişi: <a href="customer-login.html" target="_blank">customer-login.html</a></p>
+    <p style="font-size: 0.8rem; color: var(--color-grey); margin-bottom: 1rem; max-width: 36rem;">Fotoğraflar (PNG/JPG) orijinal kalitede saklanır; müşteriler tam çözünürlükte görür. Çok sayıda dosya seçtiğinizde yükleme otomatik olarak parçalara bölünür (sunucu limiti nedeniyle).</p>
     <div id="ac-msg"></div>
 
     <section class="ac-section">
@@ -132,18 +133,46 @@
                 var input = btn.parentElement.querySelector('.ac-upload');
                 var files = input && input.files;
                 if (!files || files.length === 0) { msg('Önce dosya seçin.', 'err'); return; }
-                var fd = new FormData();
-                for (var i = 0; i < files.length; i++) fd.append('photos', files[i]);
-                fetch('/api/admin/albums/' + albumId + '/photos', {
-                  method: 'POST',
-                  headers: { 'X-Admin-Secret': secret },
-                  body: fd
-                }).then(function (r) { return r.json(); })
-                  .then(function (data) {
-                    if (data.ok) { msg(data.count + ' fotoğraf yüklendi.'); input.value = ''; }
-                    else msg('Yükleme hatası.', 'err');
-                  })
-                  .catch(function () { msg('Bağlantı hatası.', 'err'); });
+                // Vercel istek gövdesi ~4.5 MB ile sınırlı; parça parça yükle (her istekte 3 dosya, büyük PNG'ler için güvenli)
+                var CHUNK = 3;
+                var total = files.length;
+                var uploaded = 0;
+                var chunks = [];
+                for (var i = 0; i < total; i += CHUNK) chunks.push(Array.from(files).slice(i, i + CHUNK));
+                btn.disabled = true;
+                msg('Yükleniyor 0/' + total + '...', 'ok');
+                function sendNext(idx) {
+                  if (idx >= chunks.length) {
+                    btn.disabled = false;
+                    input.value = '';
+                    msg(uploaded + ' fotoğraf yüklendi. Müşteriler orijinal kalitede görür.', 'ok');
+                    loadCustomers();
+                    return;
+                  }
+                  var chunk = chunks[idx];
+                  var fd = new FormData();
+                  for (var j = 0; j < chunk.length; j++) fd.append('photos', chunk[j]);
+                  fetch('/api/admin/albums/' + albumId + '/photos', {
+                    method: 'POST',
+                    headers: { 'X-Admin-Secret': secret },
+                    body: fd
+                  }).then(function (r) { return r.json(); })
+                    .then(function (data) {
+                      if (data.ok) {
+                        uploaded += (data.count || chunk.length);
+                        msg('Yükleniyor ' + uploaded + '/' + total + '...', 'ok');
+                        sendNext(idx + 1);
+                      } else {
+                        btn.disabled = false;
+                        msg('Yükleme hatası: ' + (data.error || 'Bilinmeyen'), 'err');
+                      }
+                    })
+                    .catch(function () {
+                      btn.disabled = false;
+                      msg('Bağlantı hatası.', 'err');
+                    });
+                }
+                sendNext(0);
               });
             });
             ul.querySelectorAll('.ac-view-selected').forEach(function (btn) {

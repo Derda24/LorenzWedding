@@ -631,6 +631,7 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + safe);
   }
 });
+// İstemci çok dosyada 3'lü parça gönderir (Vercel istek gövdesi ~4.5 MB). Kalite korunur; sıkıştırma yok.
 const upload = multer({ storage });
 
 app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), async function (req, res) {
