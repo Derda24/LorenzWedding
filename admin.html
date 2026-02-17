@@ -661,12 +661,17 @@
         } else if (res.status === 403) {
           showMessage('Yetkisiz. Tekrar giriş yapın.', 'error');
         } else {
+          // Try to get error message from response
           res.json().then(function (body) {
             var msg = (body && body.error) ? body.error : 'Kaydetme başarısız.';
-            if (body && body.hint) msg += ' ' + body.hint;
+            if (body && body.hint) {
+              msg += '\n\n' + body.hint;
+            }
             showMessage(msg, 'error');
           }).catch(function () {
-            showMessage('Kaydetme başarısız.', 'error');
+            // If JSON parsing fails, show generic error
+            var statusMsg = res.status === 503 ? 'Vercel\'de dosya yazma desteklenmiyor. Yerel sunucuda (npm start) çalıştırın.' : 'Kaydetme başarısız.';
+            showMessage(statusMsg, 'error');
           });
         }
       }).catch(function () {

@@ -153,7 +153,7 @@ function saveJsonToData(filename, data, res) {
     return res.status(503).json({
       ok: false,
       error: 'Vercel\'de dosya yazma desteklenmiyor.',
-      hint: 'İçerik güncellemeleri için projeyi yerelde çalıştırın (npm start), değişiklikleri data/ klasörüne kaydedin ve tekrar deploy edin. Ya da ileride Supabase Storage / Vercel Blob entegrasyonu eklenebilir.'
+      hint: 'İçerik güncellemeleri için: 1) Bilgisayarınızda "npm start" çalıştırın, 2) localhost:3000/admin.html\'de kaydedin, 3) data/ klasöründeki değişiklikleri Git\'e commit edip deploy edin.'
     });
   }
   try {
