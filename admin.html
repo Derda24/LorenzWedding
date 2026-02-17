@@ -651,11 +651,13 @@
       var secret = sessionStorage.getItem('adminSecret');
       var headers = { 'Content-Type': 'application/json' };
       if (secret) headers['X-Admin-Secret'] = secret;
+      console.log('[Admin] Saving to:', apiPath);
       fetch(apiPath, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(data)
       }).then(function (res) {
+        console.log('[Admin] Response status:', res.status, res.statusText);
         if (res.ok) {
           showMessage(label + ' siteye kaydedildi. Sayfayı yenileyerek görebilirsiniz.');
         } else if (res.status === 403) {
@@ -663,14 +665,18 @@
         } else {
           // Try to get error message from response
           res.json().then(function (body) {
+            console.error('[Admin] Save error:', body);
             var msg = (body && body.error) ? body.error : 'Kaydetme başarısız.';
             if (body && body.hint) {
               msg += '\n\n' + body.hint;
             }
+            console.error('[Admin] Error message:', msg);
             showMessage(msg, 'error');
-          }).catch(function () {
+          }).catch(function (err) {
+            console.error('[Admin] JSON parse error:', err);
             // If JSON parsing fails, show generic error
-            var statusMsg = res.status === 503 ? 'Vercel\'de dosya yazma desteklenmiyor. Yerel sunucuda (npm start) çalıştırın.' : 'Kaydetme başarısız.';
+            var statusMsg = res.status === 503 ? 'Vercel\'de dosya yazma desteklenmiyor. Yerel sunucuda (npm start) çalıştırın.' : 'Kaydetme başarısız (Status: ' + res.status + ').';
+            console.error('[Admin] Status error:', statusMsg);
             showMessage(statusMsg, 'error');
           });
         }
