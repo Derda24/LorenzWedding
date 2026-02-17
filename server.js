@@ -185,11 +185,23 @@ app.use(function (req, res, next) {
 // Intercept response to log Set-Cookie headers
 app.use(function (req, res, next) {
   const originalEnd = res.end;
+  const originalJson = res.json;
+  
+  // Override res.json to log headers before sending
+  res.json = function (body) {
+    if (req.path.startsWith('/api/')) {
+      console.log('[Response] Before sending JSON, headers:', res.getHeaders());
+      const setCookie = res.getHeader('set-cookie');
+      console.log('[Response] Set-Cookie header before send:', setCookie);
+    }
+    return originalJson.call(this, body);
+  };
+  
   res.end = function (chunk, encoding) {
     if (req.path.startsWith('/api/')) {
-      console.log('[Response] Response headers:', res.getHeaders());
+      console.log('[Response] Response ending, headers:', res.getHeaders());
       const setCookie = res.getHeader('set-cookie');
-      console.log('[Response] Set-Cookie header:', setCookie);
+      console.log('[Response] Set-Cookie header at end:', setCookie);
     }
     originalEnd.call(this, chunk, encoding);
   };
