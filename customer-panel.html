@@ -90,12 +90,57 @@
 
       function loadAlbum() {
         console.log('[Panel] Loading album...');
+        console.log('[Panel] Current URL:', window.location.href);
+        console.log('[Panel] Cookies:', document.cookie);
+        
         fetch('/api/customer/album', { credentials: 'include' })
           .then(function (r) {
             console.log('[Panel] Album response status:', r.status);
+            console.log('[Panel] Response headers:', r.headers);
+            console.log('[Panel] Response ok?', r.ok);
+            
             if (r.status === 401) {
-              console.error('[Panel] Unauthorized - redirecting to login');
-              window.location.href = 'customer-login.html';
+              console.error('[Panel] ========== UNAUTHORIZED ERROR ==========');
+              console.error('[Panel] Status:', r.status);
+              console.error('[Panel] Status Text:', r.statusText);
+              
+              // Try to get error message from response
+              return r.json().then(function (data) {
+                console.error('[Panel] Error response data:', JSON.stringify(data, null, 2));
+                console.error('[Panel] ========================================');
+                
+                // Show error message on page before redirect
+                var errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #ff0000; color: white; padding: 1rem; z-index: 99999; font-family: monospace;';
+                errorDiv.innerHTML = '<strong>SESSION ERROR:</strong><br>' +
+                  'Status: ' + r.status + '<br>' +
+                  'Error: ' + (data.error || 'Unknown') + '<br>' +
+                  'Cookies: ' + document.cookie + '<br>' +
+                  '<button onclick="this.parentElement.remove()">Close</button>';
+                document.body.appendChild(errorDiv);
+                
+                // Wait 5 seconds before redirect to see error
+                setTimeout(function () {
+                  console.error('[Panel] Redirecting to login after 5 seconds...');
+                  window.location.href = 'customer-login.html';
+                }, 5000);
+              }).catch(function (jsonErr) {
+                console.error('[Panel] Failed to parse error JSON:', jsonErr);
+                console.error('[Panel] Response text:', r.text());
+                
+                var errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: #ff0000; color: white; padding: 1rem; z-index: 99999; font-family: monospace;';
+                errorDiv.innerHTML = '<strong>SESSION ERROR (No JSON):</strong><br>' +
+                  'Status: ' + r.status + '<br>' +
+                  'JSON Parse Error: ' + jsonErr.message + '<br>' +
+                  'Cookies: ' + document.cookie + '<br>' +
+                  '<button onclick="this.parentElement.remove()">Close</button>';
+                document.body.appendChild(errorDiv);
+                
+                setTimeout(function () {
+                  window.location.href = 'customer-login.html';
+                }, 5000);
+              });
               return;
             }
             if (!r.ok) {
