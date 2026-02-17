@@ -64,7 +64,7 @@ app.use(function (req, res, next) {
     "font-src 'self' data: https://fonts.gstatic.com; " + // Google Fonts fonts
     "img-src 'self' data: https:; " + // All HTTPS images
     "connect-src 'self' https://*.supabase.co https://vercel.live; " + // Supabase API and Vercel Live
-    "frame-src 'self' https://vercel.live; " + // Allow Vercel Live iframe
+    "frame-src 'self' https://vercel.live https://www.youtube.com https://www.youtube-nocookie.com; " + // Vercel Live + YouTube embeds
     "frame-ancestors 'none';"
   );
   next();

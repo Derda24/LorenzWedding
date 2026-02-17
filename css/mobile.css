@@ -331,14 +331,9 @@
     font-size: clamp(0.875rem, 3vw, 1rem);
   }
 
-  /* Zara header mobile improvements */
+  /* Zara header mobile: padding only; grid layout from zara.css keeps left/center/right */
   .zara-header {
     padding: var(--space-3) var(--space-4);
-  }
-
-  .zara-header__center {
-    flex: 1;
-    text-align: center;
   }
 
   .zara-logo__text {
