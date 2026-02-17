@@ -132,7 +132,13 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'lorenz-session-secret',
   resave: false,
   saveUninitialized: false,
-  cookie: { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: { 
+    httpOnly: true, 
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    secure: process.env.VERCEL ? true : false, // HTTPS only on Vercel
+    sameSite: 'lax' // Allow cookies on cross-site requests
+  },
+  name: 'customer_session' // Custom session name to avoid conflicts
 }));
 
 function ensureDataDir() {
@@ -148,7 +154,16 @@ function adminAuth(req, res, next) {
 }
 
 function customerAuth(req, res, next) {
-  if (req.session && req.session.customerId) return next();
+  console.log('[Customer Auth] Checking session...');
+  console.log('[Customer Auth] Session:', req.session);
+  console.log('[Customer Auth] Session ID:', req.sessionID);
+  console.log('[Customer Auth] Customer ID:', req.session ? req.session.customerId : 'no session');
+  
+  if (req.session && req.session.customerId) {
+    console.log('[Customer Auth] Authorized, customer ID:', req.session.customerId);
+    return next();
+  }
+  console.log('[Customer Auth] Unauthorized - no customer ID in session');
   res.status(401).json({ error: 'Unauthorized' });
 }
 
@@ -298,12 +313,23 @@ app.post('/api/customer-login', async function (req, res) {
     
     console.log('[Customer Login] Password correct, creating session...');
     req.session.customerId = customer.id;
+    req.session.customerUsername = customer.username; // Store username for debugging
+    console.log('[Customer Login] Session before save:', req.session);
     req.session.save(function (err) {
       if (err) {
         console.error('[Customer Login] Session save error:', err);
-        return res.status(500).json({ error: 'Oturum açılamadı.' });
+        return res.status(500).json({ error: 'Oturum açılamadı: ' + err.message });
       }
-      console.log('[Customer Login] Session saved successfully, customer ID:', customer.id);
+      console.log('[Customer Login] Session saved successfully');
+      console.log('[Customer Login] Session ID:', req.sessionID);
+      console.log('[Customer Login] Customer ID:', customer.id);
+      // Set cookie explicitly
+      res.cookie('customer_session', req.sessionID, {
+        httpOnly: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        secure: process.env.VERCEL ? true : false,
+        sameSite: 'lax'
+      });
       res.json({ ok: true, customer: { id: customer.id, username: customer.username, name: customer.name } });
     });
   } catch (err) {
