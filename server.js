@@ -132,13 +132,15 @@ try {
 // Use cookie-session for Vercel (serverless) compatibility
 // Cookie-session stores session data directly in cookies, not in server memory
 // This works across different serverless function instances
+// Note: Cookie size limit is ~4KB, so keep session data minimal
 app.use(cookieSession({
   name: 'customer_session',
   keys: [process.env.SESSION_SECRET || 'lorenz-session-secret-change-me-in-production'],
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   httpOnly: true,
   secure: process.env.VERCEL ? true : false, // HTTPS only on Vercel
-  sameSite: 'lax'
+  sameSite: 'lax',
+  signed: true // Sign cookies for security
 }));
 
 function ensureDataDir() {
@@ -155,15 +157,17 @@ function adminAuth(req, res, next) {
 
 function customerAuth(req, res, next) {
   console.log('[Customer Auth] Checking session...');
-  console.log('[Customer Auth] Session:', req.session);
-  // cookie-session doesn't have sessionID
+  console.log('[Customer Auth] Session object:', JSON.stringify(req.session));
+  console.log('[Customer Auth] Session keys:', req.session ? Object.keys(req.session) : 'no session');
   console.log('[Customer Auth] Customer ID:', req.session ? req.session.customerId : 'no session');
+  console.log('[Customer Auth] Request cookies:', req.headers.cookie);
   
   if (req.session && req.session.customerId) {
-    console.log('[Customer Auth] Authorized, customer ID:', req.session.customerId);
+    console.log('[Customer Auth] ✓ Authorized, customer ID:', req.session.customerId);
     return next();
   }
-  console.log('[Customer Auth] Unauthorized - no customer ID in session');
+  console.log('[Customer Auth] ✗ Unauthorized - no customer ID in session');
+  console.log('[Customer Auth] Session exists?', !!req.session);
   res.status(401).json({ error: 'Unauthorized' });
 }
 
@@ -313,11 +317,13 @@ app.post('/api/customer-login', async function (req, res) {
     
     console.log('[Customer Login] Password correct, creating session...');
     // cookie-session automatically saves to cookie, no need for .save()
+    // Keep session data minimal (cookie size limit ~4KB)
     req.session.customerId = customer.id;
-    req.session.customerUsername = customer.username; // Store username for debugging
-    console.log('[Customer Login] Session set:', req.session);
+    // Don't store username in session to keep cookie small
+    console.log('[Customer Login] Session set:', JSON.stringify(req.session));
     console.log('[Customer Login] Customer ID:', customer.id);
-    // cookie-session saves automatically, just send response
+    console.log('[Customer Login] Session will be saved automatically by cookie-session');
+    // cookie-session saves automatically when response is sent
     res.json({ ok: true, customer: { id: customer.id, username: customer.username, name: customer.name } });
   } catch (err) {
     console.error('[Customer Login] Exception:', err);
