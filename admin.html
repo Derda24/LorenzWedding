@@ -661,7 +661,13 @@
         } else if (res.status === 403) {
           showMessage('Yetkisiz. Tekrar giriş yapın.', 'error');
         } else {
-          showMessage('Kaydetme başarısız.', 'error');
+          res.json().then(function (body) {
+            var msg = (body && body.error) ? body.error : 'Kaydetme başarısız.';
+            if (body && body.hint) msg += ' ' + body.hint;
+            showMessage(msg, 'error');
+          }).catch(function () {
+            showMessage('Kaydetme başarısız.', 'error');
+          });
         }
       }).catch(function () {
         showMessage('Sunucu çalışmıyor. Önce proje klasöründe "npm start" çalıştırın, sonra tekrar deneyin. Veya JSON İndir ile dosyayı data/ klasörüne kopyalayın.', 'error');

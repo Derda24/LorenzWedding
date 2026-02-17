@@ -147,25 +147,37 @@ function customerAuth(req, res, next) {
 }
 
 // ---------- Existing content API (admin only) ----------
+// Helper: save JSON to data dir (on Vercel filesystem is read-only, so this fails)
+function saveJsonToData(filename, data, res) {
+  if (isVercelEnv) {
+    return res.status(503).json({
+      ok: false,
+      error: 'Vercel\'de dosya yazma desteklenmiyor.',
+      hint: 'İçerik güncellemeleri için projeyi yerelde çalıştırın (npm start), değişiklikleri data/ klasörüne kaydedin ve tekrar deploy edin. Ya da ileride Supabase Storage / Vercel Blob entegrasyonu eklenebilir.'
+    });
+  }
+  try {
+    ensureDataDir();
+    const filePath = path.join(DATA_DIR, filename);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Save failed:', filename, err);
+    res.status(500).json({ ok: false, error: 'Dosya yazılamadı: ' + err.message });
+  }
+}
+
 app.post('/api/save-gallery', adminAuth, function (req, res) {
-  ensureDataDir();
-  fs.writeFileSync(path.join(DATA_DIR, 'gallery.json'), JSON.stringify(req.body, null, 2), 'utf8');
-  res.json({ ok: true });
+  saveJsonToData('gallery.json', req.body, res);
 });
 app.post('/api/save-videos', adminAuth, function (req, res) {
-  ensureDataDir();
-  fs.writeFileSync(path.join(DATA_DIR, 'videos.json'), JSON.stringify(req.body, null, 2), 'utf8');
-  res.json({ ok: true });
+  saveJsonToData('videos.json', req.body, res);
 });
 app.post('/api/save-featured', adminAuth, function (req, res) {
-  ensureDataDir();
-  fs.writeFileSync(path.join(DATA_DIR, 'featured.json'), JSON.stringify(req.body, null, 2), 'utf8');
-  res.json({ ok: true });
+  saveJsonToData('featured.json', req.body, res);
 });
 app.post('/api/save-services', adminAuth, function (req, res) {
-  ensureDataDir();
-  fs.writeFileSync(path.join(DATA_DIR, 'services.json'), JSON.stringify(req.body, null, 2), 'utf8');
-  res.json({ ok: true });
+  saveJsonToData('services.json', req.body, res);
 });
 
 // ---------- Customer auth ----------
