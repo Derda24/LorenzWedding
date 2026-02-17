@@ -149,15 +149,28 @@ try {
 // Cookie-session stores session data directly in cookies, not in server memory
 // This works across different serverless function instances
 // Note: Cookie size limit is ~4KB, so keep session data minimal
+const SESSION_SECRET_VALUE = process.env.SESSION_SECRET || 'lorenz-session-secret-change-me-in-production';
+console.log('[Session] Initializing cookie-session');
+console.log('[Session] SESSION_SECRET is set?', !!process.env.SESSION_SECRET);
+console.log('[Session] Using secret:', SESSION_SECRET_VALUE.substring(0, 10) + '...');
+console.log('[Session] Vercel env?', !!process.env.VERCEL);
+
 app.use(cookieSession({
   name: 'customer_session',
-  keys: [process.env.SESSION_SECRET || 'lorenz-session-secret-change-me-in-production'],
+  keys: [SESSION_SECRET_VALUE],
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   httpOnly: true,
   secure: process.env.VERCEL ? true : false, // HTTPS only on Vercel
   sameSite: 'lax',
   signed: true // Sign cookies for security
 }));
+
+// Log session middleware setup
+app.use(function (req, res, next) {
+  console.log('[Session Middleware] Request path:', req.path);
+  console.log('[Session Middleware] Session after cookie-session:', req.session ? JSON.stringify(req.session) : 'null');
+  next();
+});
 
 function ensureDataDir() {
   // Only create directory locally (not on Vercel)
