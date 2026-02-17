@@ -192,17 +192,27 @@ function saveJsonToData(filename, data, res) {
   
   if (useStorage) {
     console.log('Using Supabase Storage for:', filename);
+    console.log('Bucket:', storageSupabase.BUCKET);
+    console.log('Supabase URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
     storageSupabase.uploadJson(filename, data).then(function (result) {
       if (result.ok) {
         console.log('Successfully uploaded to Storage:', filename);
         res.json({ ok: true });
       } else {
         console.error('Storage upload failed:', filename, result.error);
-        res.status(500).json({ ok: false, error: result.error || 'Storage upload failed' });
+        const errorMsg = result.error || 'Storage upload failed';
+        const hint = result.code === '404' || errorMsg.includes('Bucket not found') 
+          ? `Supabase Dashboard → Storage → "${storageSupabase.BUCKET}" bucket'ını oluşturun.`
+          : 'Supabase Storage yapılandırmasını kontrol edin.';
+        res.status(500).json({ ok: false, error: errorMsg, hint: hint });
       }
     }).catch(function (err) {
       console.error('Save to Storage exception:', filename, err);
-      res.status(500).json({ ok: false, error: err.message });
+      res.status(500).json({ 
+        ok: false, 
+        error: err.message || 'Storage upload exception',
+        hint: 'Supabase Storage bucket oluşturuldu mu? Dashboard\'da kontrol edin.'
+      });
     });
     return;
   }

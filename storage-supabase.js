@@ -26,17 +26,27 @@ async function uploadJson(filename, data) {
   }
   try {
     const body = JSON.stringify(data, null, 2);
-    const { error } = await supabase.storage
+    const { data: uploadData, error } = await supabase.storage
       .from(BUCKET)
       .upload(filename, body, { contentType: 'application/json', upsert: true });
+    
     if (error) {
       console.error('Supabase Storage upload error:', error);
-      return { ok: false, error: error.message };
+      // Check for common errors
+      let errorMsg = error.message;
+      if (error.message && error.message.includes('Bucket not found')) {
+        errorMsg = `Bucket "${BUCKET}" bulunamadı. Supabase Dashboard → Storage → "${BUCKET}" bucket'ını oluşturun.`;
+      } else if (error.message && error.message.includes('new row violates row-level security')) {
+        errorMsg = `Bucket "${BUCKET}" için izin sorunu. Bucket'ı public yapın veya RLS politikalarını kontrol edin.`;
+      }
+      return { ok: false, error: errorMsg, code: error.statusCode || error.code };
     }
+    
+    console.log('Upload successful:', filename, uploadData);
     return { ok: true };
   } catch (err) {
     console.error('Supabase Storage upload exception:', err);
-    return { ok: false, error: err.message };
+    return { ok: false, error: err.message || 'Unknown error' };
   }
 }
 
