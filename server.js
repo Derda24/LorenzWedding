@@ -205,9 +205,15 @@ function saveJsonToData(filename, data, res) {
         console.error('[Save] Error:', result.error);
         console.error('[Save] Hint:', result.hint);
         console.error('[Save] Code:', result.code);
+        console.error('[Save] Raw Error:', result.rawError);
+        console.error('[Save] Full Error:', result.fullError);
         const errorMsg = result.error || 'Storage upload failed';
-        const hint = result.hint || 'Supabase Storage yapılandırmasını kontrol edin.';
-        res.status(500).json({ ok: false, error: errorMsg, hint: hint });
+        let hint = result.hint || 'Supabase Storage yapılandırmasını kontrol edin.';
+        // Add raw error to hint for debugging
+        if (result.rawError && result.rawError !== errorMsg) {
+          hint += '\n\nGerçek hata: ' + result.rawError;
+        }
+        res.status(500).json({ ok: false, error: errorMsg, hint: hint, rawError: result.rawError, code: result.code });
       }
     }).catch(function (err) {
       console.error('[Save] Save to Storage exception:', filename, err);

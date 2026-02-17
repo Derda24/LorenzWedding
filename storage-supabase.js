@@ -6,9 +6,22 @@ const { createClient } = require('@supabase/supabase-js');
 
 const BUCKET = 'site-data';
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+// IMPORTANT: Use SERVICE_ROLE_KEY for Storage uploads (bypasses RLS)
+// Anon key won't work for uploads even if bucket is public
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
+
+// Log configuration on module load
+if (supabase) {
+  console.log('[Storage] Supabase Storage initialized');
+  console.log('[Storage] URL:', supabaseUrl);
+  console.log('[Storage] Key type:', supabaseKey.startsWith('eyJ') ? 'JWT Token' : 'Unknown');
+  console.log('[Storage] Key prefix:', supabaseKey.substring(0, 20) + '...');
+} else {
+  console.warn('[Storage] Supabase Storage NOT initialized');
+  console.warn('[Storage] Missing:', !supabaseUrl ? 'SUPABASE_URL' : '', !supabaseKey ? 'SUPABASE_SERVICE_ROLE_KEY' : '');
+}
 
 function isAvailable() {
   return !!supabase;
@@ -94,7 +107,7 @@ async function uploadJson(filename, data) {
         hint = `Supabase Storage yapılandırmasını kontrol edin. Status: ${error.statusCode || 'N/A'}`;
       }
       
-      return { ok: false, error: errorMsg, hint: hint, code: error.statusCode || error.code, rawError: error.message };
+      return { ok: false, error: errorMsg, hint: hint, code: error.statusCode || error.code, rawError: error.message, fullError: JSON.stringify(error) };
     }
     
     console.log('[Storage] Upload successful:', filename);
