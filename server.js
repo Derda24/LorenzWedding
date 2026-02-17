@@ -50,13 +50,14 @@ const ADMIN_SECRET = process.env.ADMIN_SECRET || 'lorenz-admin-secret-change-me'
 // Set Content Security Policy header
 app.use(function (req, res, next) {
   // CSP with Google Fonts and other external resources support
+  // Allow Vercel Live feedback script and unsafe-eval for compatibility
   res.setHeader('Content-Security-Policy', 
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " + // unsafe-eval and unsafe-inline for compatibility
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live; " + // unsafe-eval and Vercel Live
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + // Google Fonts CSS
     "font-src 'self' data: https://fonts.gstatic.com; " + // Google Fonts fonts
     "img-src 'self' data: https:; " + // All HTTPS images
-    "connect-src 'self' https://*.supabase.co; " + // Supabase API
+    "connect-src 'self' https://*.supabase.co https://vercel.live; " + // Supabase API and Vercel Live
     "frame-ancestors 'none';"
   );
   next();
@@ -172,17 +173,24 @@ function adminAuth(req, res, next) {
 
 function customerAuth(req, res, next) {
   console.log('[Customer Auth] Checking session...');
-  console.log('[Customer Auth] Session object:', JSON.stringify(req.session));
+  console.log('[Customer Auth] Request URL:', req.url);
+  console.log('[Customer Auth] Request method:', req.method);
+  console.log('[Customer Auth] Request cookies header:', req.headers.cookie);
+  console.log('[Customer Auth] Session object:', req.session ? JSON.stringify(req.session) : 'null');
   console.log('[Customer Auth] Session keys:', req.session ? Object.keys(req.session) : 'no session');
   console.log('[Customer Auth] Customer ID:', req.session ? req.session.customerId : 'no session');
-  console.log('[Customer Auth] Request cookies:', req.headers.cookie);
+  console.log('[Customer Auth] Session type:', typeof req.session);
   
-  if (req.session && req.session.customerId) {
+  // Check if session exists and has customerId
+  if (req.session && typeof req.session === 'object' && req.session.customerId) {
     console.log('[Customer Auth] ✓ Authorized, customer ID:', req.session.customerId);
     return next();
   }
+  
   console.log('[Customer Auth] ✗ Unauthorized - no customer ID in session');
   console.log('[Customer Auth] Session exists?', !!req.session);
+  console.log('[Customer Auth] Session is object?', req.session && typeof req.session === 'object');
+  console.log('[Customer Auth] customerId exists?', req.session && req.session.customerId);
   res.status(401).json({ error: 'Unauthorized' });
 }
 

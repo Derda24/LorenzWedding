@@ -89,11 +89,21 @@
       }
 
       function loadAlbum() {
+        console.log('[Panel] Loading album...');
         fetch('/api/customer/album', { credentials: 'include' })
           .then(function (r) {
+            console.log('[Panel] Album response status:', r.status);
             if (r.status === 401) {
+              console.error('[Panel] Unauthorized - redirecting to login');
               window.location.href = 'customer-login.html';
               return;
+            }
+            if (!r.ok) {
+              console.error('[Panel] Error response:', r.status, r.statusText);
+              return r.json().then(function (data) {
+                console.error('[Panel] Error data:', data);
+                throw new Error(data.error || 'Failed to load album');
+              });
             }
             return r.json();
           })
