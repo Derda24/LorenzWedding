@@ -1,5 +1,5 @@
 /**
- * Lorenz Wedding – local server + admin API + customer portal API
+ * LORENZWED – local server + admin API + customer portal API
  * Run: npm install && npm start
  */
 const express = require('express');
@@ -627,7 +627,7 @@ if (require.main === module) {
     if (db.initSchema) {
       await db.initSchema();
     }
-    console.log('Lorenz Wedding – http://localhost:' + PORT);
+    console.log('LORENZWED – http://localhost:' + PORT);
     console.log('Admin: http://localhost:' + PORT + '/admin.html');
     console.log('Müşteri girişi: http://localhost:' + PORT + '/customer-login.html');
     if (process.env.SUPABASE_URL) {

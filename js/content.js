@@ -1,5 +1,5 @@
 /**
- * Lorenz Wedding – Dynamic content loader
+ * LORENZWED – Dynamic content loader
  * Loads photos, videos, and featured content from JSON
  */
 (function () {

@@ -1,5 +1,5 @@
 /**
- * Lorenz Wedding Photo & Film - Gallery Filter
+ * LORENZWED Photo & Film - Gallery Filter
  * Filter gallery items by category
  */
 

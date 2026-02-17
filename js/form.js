@@ -1,5 +1,5 @@
 /**
- * Lorenz Wedding Photo & Film - Contact Form
+ * LORENZWED Photo & Film - Contact Form
  * Form validation and submission handling
  */
 

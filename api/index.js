@@ -1,5 +1,5 @@
 /**
- * Vercel serverless function wrapper for Lorenz Wedding Express app
+ * Vercel serverless function wrapper for LORENZWED Express app
  */
 let app;
 try {

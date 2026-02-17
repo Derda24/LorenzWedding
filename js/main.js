@@ -1,5 +1,5 @@
 /**
- * Lorenz Wedding Photo & Film - Main JavaScript
+ * LORENZWED Photo & Film - Main JavaScript
  * Navigation, mobile menu, and core interactions
  */
 

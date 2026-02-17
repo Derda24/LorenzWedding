@@ -1,7 +1,7 @@
 {
-  "name": "lorenz-wedding",
+  "name": "lorenzwed",
   "version": "1.0.0",
-  "description": "Lorenz Wedding Photo & Film website",
+  "description": "LORENZWED Photo & Film website",
   "engines": {
     "node": "20.x"
   },
