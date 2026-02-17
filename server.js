@@ -156,7 +156,7 @@ function adminAuth(req, res, next) {
 function customerAuth(req, res, next) {
   console.log('[Customer Auth] Checking session...');
   console.log('[Customer Auth] Session:', req.session);
-  console.log('[Customer Auth] Session ID:', req.sessionID);
+  // cookie-session doesn't have sessionID
   console.log('[Customer Auth] Customer ID:', req.session ? req.session.customerId : 'no session');
   
   if (req.session && req.session.customerId) {
@@ -327,9 +327,9 @@ app.post('/api/customer-login', async function (req, res) {
 });
 
 app.post('/api/customer-logout', function (req, res) {
-  req.session.destroy(function () {
-    res.json({ ok: true });
-  });
+  // cookie-session: set session to null to clear cookie
+  req.session = null;
+  res.json({ ok: true });
 });
 
 app.get('/api/customer/me', customerAuth, async function (req, res) {
