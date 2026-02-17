@@ -47,16 +47,16 @@ const DATA_DIR = path.join(__dirname, 'data');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
 const ADMIN_SECRET = process.env.ADMIN_SECRET || 'lorenz-admin-secret-change-me';
 
-// Set Content Security Policy header (relaxed for cookie-session compatibility)
+// Set Content Security Policy header
 app.use(function (req, res, next) {
-  // Allow unsafe-eval for cookie-session if needed, but cookie-session shouldn't need it
+  // CSP with Google Fonts and other external resources support
   res.setHeader('Content-Security-Policy', 
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " + // unsafe-eval for compatibility
-    "style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data: https:; " +
-    "font-src 'self' data:; " +
-    "connect-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " + // unsafe-eval and unsafe-inline for compatibility
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + // Google Fonts CSS
+    "font-src 'self' data: https://fonts.gstatic.com; " + // Google Fonts fonts
+    "img-src 'self' data: https:; " + // All HTTPS images
+    "connect-src 'self' https://*.supabase.co; " + // Supabase API
     "frame-ancestors 'none';"
   );
   next();
