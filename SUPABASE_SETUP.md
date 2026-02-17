@@ -102,9 +102,14 @@ SESSION_SECRET=your-session-secret-here
    - `SUPABASE_URL` = Your Supabase Project URL
    - `SUPABASE_SERVICE_ROLE_KEY` = Your Supabase Service Role Key
    - `ADMIN_SECRET` = Your admin secret (same as before)
-   - `SESSION_SECRET` = Your session secret (same as before)
+   - `SESSION_SECRET` = Your session secret (⚠️ **REQUIRED** for customer login to work)
+     - Generate a strong random string (e.g., use `openssl rand -base64 32` or any password generator)
+     - This is used to sign/encrypt session cookies
+     - **Must be the same across all environments** for sessions to work
 4. Make sure to add them for **Production**, **Preview**, and **Development** environments
 5. Click **Save**
+
+**⚠️ Important:** If `SESSION_SECRET` is missing or incorrect, customer login will fail silently because cookies cannot be decoded.
 
 ## Step 5: Update Your Code
 
