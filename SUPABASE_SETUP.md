@@ -37,8 +37,15 @@ Admin panelinden Vercel'de "Siteye kaydet" ile içerik kaydedebilmek için Supab
 1. Supabase Dashboard → **Storage** (sol menü)
 2. **New bucket** tıklayın
 3. **Name**: `site-data` (tam bu isim olmalı)
-4. **Public bucket**: Kapalı bırakabilirsiniz (sunucu service role ile erişir)
+4. **Public bucket**: ✅ **AÇIK OLMALI** (ON olarak işaretleyin)
+   - ⚠️ **ÖNEMLİ**: Bucket'ı public yapmanız gerekiyor, aksi halde upload hatası alırsınız
 5. **Create bucket** ile oluşturun
+
+**Mevcut bucket'ı public yapmak için:**
+- Storage → `site-data` bucket'ına tıklayın
+- **Settings** sekmesine gidin
+- **Public bucket** seçeneğini **ON** yapın
+- **Save** butonuna tıklayın
 
 İlk kayıtta `gallery.json`, `videos.json`, `featured.json`, `services.json` dosyaları bu bucket'a yazılır; site bu dosyaları `/api/data/...` üzerinden okur.
 
