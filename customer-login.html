@@ -41,17 +41,24 @@
         e.preventDefault();
         var err = document.getElementById('cust-login-error');
         err.style.display = 'none';
+        var username = document.getElementById('cust-username').value.trim();
+        var password = document.getElementById('cust-password').value;
+        console.log('[Login] Attempting login for:', username);
+        console.log('[Login] Current cookies before login:', document.cookie);
+        
         fetch('/api/customer-login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          credentials: 'include', // IMPORTANT: Include cookies in request
           body: JSON.stringify({
-            username: document.getElementById('cust-username').value.trim(),
-            password: document.getElementById('cust-password').value
+            username: username,
+            password: password
           })
         }).then(function (r) {
           console.log('[Login] Response status:', r.status, r.statusText);
           console.log('[Login] Response headers:', r.headers);
+          console.log('[Login] Set-Cookie header:', r.headers.get('set-cookie'));
+          console.log('[Login] Cookies after login:', document.cookie);
           
           // Check if response has content
           const contentType = r.headers.get('content-type');

@@ -92,8 +92,21 @@
         console.log('[Panel] Loading album...');
         console.log('[Panel] Current URL:', window.location.href);
         console.log('[Panel] Cookies:', document.cookie);
+        console.log('[Panel] All cookies:', document.cookie.split(';').map(function(c) { return c.trim(); }));
         
-        fetch('/api/customer/album', { credentials: 'include' })
+        // Check if customer_session cookie exists
+        var hasSessionCookie = document.cookie.includes('customer_session');
+        console.log('[Panel] Has customer_session cookie?', hasSessionCookie);
+        if (!hasSessionCookie) {
+          console.error('[Panel] ⚠️ NO SESSION COOKIE FOUND!');
+        }
+        
+        fetch('/api/customer/album', { 
+          credentials: 'include', // IMPORTANT: Include cookies in request
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
           .then(function (r) {
             console.log('[Panel] Album response status:', r.status);
             console.log('[Panel] Response headers:', r.headers);
