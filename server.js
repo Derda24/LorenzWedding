@@ -166,10 +166,27 @@ app.use(cookieSession({
   signed: true // Sign cookies for security
 }));
 
-// Log session middleware setup
+// Log session middleware setup (only for API routes to avoid spam)
 app.use(function (req, res, next) {
-  console.log('[Session Middleware] Request path:', req.path);
-  console.log('[Session Middleware] Session after cookie-session:', req.session ? JSON.stringify(req.session) : 'null');
+  if (req.path.startsWith('/api/')) {
+    console.log('[Session Middleware] Request path:', req.path);
+    console.log('[Session Middleware] Request cookies:', req.headers.cookie);
+    console.log('[Session Middleware] Session after cookie-session:', req.session ? JSON.stringify(req.session) : 'null');
+  }
+  next();
+});
+
+// Intercept response to log Set-Cookie headers
+app.use(function (req, res, next) {
+  const originalEnd = res.end;
+  res.end = function (chunk, encoding) {
+    if (req.path.startsWith('/api/')) {
+      console.log('[Response] Response headers:', res.getHeaders());
+      const setCookie = res.getHeader('set-cookie');
+      console.log('[Response] Set-Cookie header:', setCookie);
+    }
+    originalEnd.call(this, chunk, encoding);
+  };
   next();
 });
 
@@ -353,15 +370,21 @@ app.post('/api/customer-login', async function (req, res) {
     }
     
     console.log('[Customer Login] Password correct, creating session...');
-    // cookie-session automatically saves to cookie, no need for .save()
+    console.log('[Customer Login] Session before setting:', JSON.stringify(req.session));
+    
+    // cookie-session automatically saves to cookie when response is sent
     // Keep session data minimal (cookie size limit ~4KB)
     req.session.customerId = customer.id;
-    // Don't store username in session to keep cookie small
-    console.log('[Customer Login] Session set:', JSON.stringify(req.session));
+    
+    console.log('[Customer Login] Session after setting:', JSON.stringify(req.session));
     console.log('[Customer Login] Customer ID:', customer.id);
     console.log('[Customer Login] Session will be saved automatically by cookie-session');
-    // cookie-session saves automatically when response is sent
+    
+    // Send response - cookie-session will set cookie automatically
     res.json({ ok: true, customer: { id: customer.id, username: customer.username, name: customer.name } });
+    
+    // Log after response (cookie should be set now)
+    console.log('[Customer Login] Response sent, cookie should be set');
   } catch (err) {
     console.error('[Customer Login] Exception:', err);
     console.error('[Customer Login] Stack:', err.stack);
