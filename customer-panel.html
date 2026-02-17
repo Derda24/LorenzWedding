@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Fotoğraflarım | LORENZ</title>
+  <title>Fotoğraflarım | LORENZWED</title>
   <link rel="stylesheet" href="css/main.css">
   <style>
     .customer-panel { max-width: 60rem; margin: 0 auto; padding: 2rem; }
@@ -184,15 +184,84 @@
             grid.innerHTML = allPhotos.map(function (p, idx) {
               var sel = selectedIds.indexOf(p.id) !== -1 ? ' selected' : '';
               return '<div class="customer-panel__photo' + sel + '" data-id="' + p.id + '" data-index="' + idx + '" role="button" tabindex="0">' +
-                '<img src="' + p.url + '" alt="" loading="lazy">' +
+                '<img src="' + p.url + '" alt="" loading="lazy" onerror="console.error(\'[Panel] Image failed to load:\', this.src);">' +
                 (sel ? '<span class="tick">✓</span>' : '') +
                 '</div>';
             }).join('');
             document.getElementById('panel-actions').style.display = 'flex';
             updateCount();
+            
+            // Add click handlers for selection and lightbox
+            var clickTimeouts = {}; // Store timeouts per photo ID
+            
             grid.querySelectorAll('.customer-panel__photo').forEach(function (el) {
+              var photoId = el.getAttribute('data-id');
+              
+              // Single click: toggle selection, double click: open lightbox
               el.addEventListener('click', function (e) {
-                openLightbox(Number(el.dataset.index));
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Check if double click is coming
+                if (clickTimeouts[photoId]) {
+                  clearTimeout(clickTimeouts[photoId]);
+                  delete clickTimeouts[photoId];
+                  // Double click detected - open lightbox
+                  openLightbox(Number(el.dataset.index));
+                  return;
+                }
+                
+                // Single click - toggle selection (with delay to detect double click)
+                clickTimeouts[photoId] = setTimeout(function () {
+                  delete clickTimeouts[photoId];
+                  var id = Number(photoId);
+                  var idx = selectedIds.indexOf(id);
+                  
+                  if (idx === -1) {
+                    selectedIds.push(id);
+                    el.classList.add('selected');
+                    var tick = el.querySelector('.tick');
+                    if (!tick) {
+                      tick = document.createElement('span');
+                      tick.className = 'tick';
+                      tick.textContent = '✓';
+                      el.appendChild(tick);
+                    }
+                  } else {
+                    selectedIds.splice(idx, 1);
+                    el.classList.remove('selected');
+                    var tick = el.querySelector('.tick');
+                    if (tick) tick.remove();
+                  }
+                  updateCount();
+                }, 300); // 300ms delay to detect double click
+              });
+              
+              // Keyboard support (Enter/Space to toggle selection)
+              el.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  var id = Number(photoId);
+                  var idx = selectedIds.indexOf(id);
+                  
+                  if (idx === -1) {
+                    selectedIds.push(id);
+                    el.classList.add('selected');
+                    var tick = el.querySelector('.tick');
+                    if (!tick) {
+                      tick = document.createElement('span');
+                      tick.className = 'tick';
+                      tick.textContent = '✓';
+                      el.appendChild(tick);
+                    }
+                  } else {
+                    selectedIds.splice(idx, 1);
+                    el.classList.remove('selected');
+                    var tick = el.querySelector('.tick');
+                    if (tick) tick.remove();
+                  }
+                  updateCount();
+                }
               });
             });
           });
