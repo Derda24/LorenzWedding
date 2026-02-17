@@ -5,7 +5,8 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const session = require('express-session');
+// Use cookie-session for Vercel compatibility (serverless functions don't share memory)
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcrypt');
 const multer = require('multer');
 let db;
@@ -128,17 +129,16 @@ try {
   // Continue anyway - routes might still work
 }
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'lorenz-session-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: { 
-    httpOnly: true, 
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    secure: process.env.VERCEL ? true : false, // HTTPS only on Vercel
-    sameSite: 'lax' // Allow cookies on cross-site requests
-  },
-  name: 'customer_session' // Custom session name to avoid conflicts
+// Use cookie-session for Vercel (serverless) compatibility
+// Cookie-session stores session data directly in cookies, not in server memory
+// This works across different serverless function instances
+app.use(cookieSession({
+  name: 'customer_session',
+  keys: [process.env.SESSION_SECRET || 'lorenz-session-secret-change-me-in-production'],
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  httpOnly: true,
+  secure: process.env.VERCEL ? true : false, // HTTPS only on Vercel
+  sameSite: 'lax'
 }));
 
 function ensureDataDir() {
@@ -312,26 +312,13 @@ app.post('/api/customer-login', async function (req, res) {
     }
     
     console.log('[Customer Login] Password correct, creating session...');
+    // cookie-session automatically saves to cookie, no need for .save()
     req.session.customerId = customer.id;
     req.session.customerUsername = customer.username; // Store username for debugging
-    console.log('[Customer Login] Session before save:', req.session);
-    req.session.save(function (err) {
-      if (err) {
-        console.error('[Customer Login] Session save error:', err);
-        return res.status(500).json({ error: 'Oturum açılamadı: ' + err.message });
-      }
-      console.log('[Customer Login] Session saved successfully');
-      console.log('[Customer Login] Session ID:', req.sessionID);
-      console.log('[Customer Login] Customer ID:', customer.id);
-      // Set cookie explicitly
-      res.cookie('customer_session', req.sessionID, {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        secure: process.env.VERCEL ? true : false,
-        sameSite: 'lax'
-      });
-      res.json({ ok: true, customer: { id: customer.id, username: customer.username, name: customer.name } });
-    });
+    console.log('[Customer Login] Session set:', req.session);
+    console.log('[Customer Login] Customer ID:', customer.id);
+    // cookie-session saves automatically, just send response
+    res.json({ ok: true, customer: { id: customer.id, username: customer.username, name: customer.name } });
   } catch (err) {
     console.error('[Customer Login] Exception:', err);
     console.error('[Customer Login] Stack:', err.stack);
