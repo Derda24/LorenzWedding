@@ -155,9 +155,46 @@ async function getJson(filename) {
   }
 }
 
+/**
+ * Upload photo/image file to Storage.
+ * @param {string} filePath - Path in bucket, e.g. 'albums/1/photo.jpg'
+ * @param {Buffer} fileBuffer - File buffer
+ * @param {string} contentType - MIME type, e.g. 'image/jpeg'
+ * @returns {Promise<{ ok: boolean, url?: string, error?: string }>}
+ */
+async function uploadPhoto(filePath, fileBuffer, contentType) {
+  if (!supabase) {
+    return { ok: false, error: 'Supabase not configured' };
+  }
+  try {
+    console.log(`[Storage] Uploading photo: ${filePath} (${fileBuffer.length} bytes, ${contentType})`);
+    
+    const { data, error } = await supabase.storage
+      .from(BUCKET)
+      .upload(filePath, fileBuffer, { contentType: contentType, upsert: true });
+    
+    if (error) {
+      console.error('[Storage] Photo upload error:', error);
+      return { ok: false, error: error.message };
+    }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filePath);
+    const publicUrl = urlData.publicUrl;
+    
+    console.log('[Storage] Photo upload successful:', filePath);
+    console.log('[Storage] Public URL:', publicUrl);
+    return { ok: true, url: publicUrl };
+  } catch (err) {
+    console.error('[Storage] Photo upload exception:', err);
+    return { ok: false, error: err.message || 'Unknown error' };
+  }
+}
+
 module.exports = {
   isAvailable,
   uploadJson,
   getJson,
+  uploadPhoto,
   BUCKET
 };

@@ -74,6 +74,8 @@ Admin panelinden Vercel'de "Siteye kaydet" ile içerik kaydedebilmek için Supab
 
 İlk kayıtta `gallery.json`, `videos.json`, `featured.json`, `services.json` dosyaları bu bucket'a yazılır; site bu dosyaları `/api/data/...` üzerinden okur.
 
+**Not:** `site-data` bucket'ı hem JSON dosyaları hem de album fotoğrafları için kullanılır. Fotoğraflar `albums/{albumId}/{filename}` path'i ile kaydedilir.
+
 ## Step 3: Get Your Supabase Credentials
 
 1. In your Supabase project dashboard, go to **Settings** → **API** (left sidebar)

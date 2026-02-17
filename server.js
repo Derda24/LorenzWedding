@@ -438,9 +438,29 @@ app.get('/api/customer/album', customerAuth, async function (req, res) {
     try {
       if (album.selected_photo_ids) selectedIds = JSON.parse(album.selected_photo_ids);
     } catch (e) {}
-    const baseUrl = '/uploads/albums/' + album.id + '/';
+    
+    // Determine photo URLs: if path starts with 'albums/', it's in Supabase Storage
     const photosWithUrl = photos.map(function (p) {
-      return { id: p.id, url: baseUrl + (p.filename || path.basename(p.path)), filename: p.filename };
+      let url;
+      if (p.path && p.path.startsWith('albums/')) {
+        // Supabase Storage path - get public URL
+        if (storageSupabase && storageSupabase.isAvailable()) {
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const bucket = storageSupabase.BUCKET;
+          url = `${supabaseUrl}/storage/v1/object/public/${bucket}/${p.path}`;
+        } else {
+          // Fallback to local path
+          url = '/uploads/' + p.path;
+        }
+      } else if (p.path && (p.path.startsWith('http://') || p.path.startsWith('https://'))) {
+        // Already a full URL
+        url = p.path;
+      } else {
+        // Local path
+        const baseUrl = '/uploads/albums/' + album.id + '/';
+        url = baseUrl + (p.filename || path.basename(p.path));
+      }
+      return { id: p.id, url: url, filename: p.filename };
     });
     res.json({
       album: { id: album.id, name: album.name, event_date: album.event_date },
@@ -534,9 +554,28 @@ app.get('/api/admin/albums/:id', adminAuth, async function (req, res) {
     try {
       if (album.selected_photo_ids) selectedIds = JSON.parse(album.selected_photo_ids);
     } catch (e) {}
-    const baseUrl = '/uploads/albums/' + album.id + '/';
+    // Determine photo URLs: if path starts with 'albums/', it's in Supabase Storage
     const photosWithUrl = photos.map(function (p) {
-      return { id: p.id, url: baseUrl + (p.filename || path.basename(p.path)), filename: p.filename, selected: selectedIds.indexOf(p.id) !== -1 };
+      let url;
+      if (p.path && p.path.startsWith('albums/')) {
+        // Supabase Storage path - get public URL
+        if (storageSupabase && storageSupabase.isAvailable()) {
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const bucket = storageSupabase.BUCKET;
+          url = `${supabaseUrl}/storage/v1/object/public/${bucket}/${p.path}`;
+        } else {
+          // Fallback to local path
+          url = '/uploads/' + p.path;
+        }
+      } else if (p.path && (p.path.startsWith('http://') || p.path.startsWith('https://'))) {
+        // Already a full URL
+        url = p.path;
+      } else {
+        // Local path
+        const baseUrl = '/uploads/albums/' + album.id + '/';
+        url = baseUrl + (p.filename || path.basename(p.path));
+      }
+      return { id: p.id, url: url, filename: p.filename, selected: selectedIds.indexOf(p.id) !== -1 };
     });
     res.json({ album, photos: photosWithUrl, selectedIds, approvedAt: album.approved_at });
   } catch (err) {
@@ -602,12 +641,45 @@ app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), 
     const files = req.files || [];
     const existingPhotos = await db.getPhotosByAlbumId(albumId);
     let order = existingPhotos.length;
+    
+    console.log('[Upload] Processing', files.length, 'files for album', albumId);
+    
     for (const f of files) {
-      await db.addPhoto(albumId, f.path, f.filename, order++);
+      let photoPath = f.path;
+      let photoUrl = null;
+      
+      // On Vercel, upload to Supabase Storage instead of /tmp
+      if (isVercelEnv && storageSupabase && storageSupabase.isAvailable()) {
+        console.log('[Upload] Uploading to Supabase Storage:', f.filename);
+        const storagePath = `albums/${albumId}/${f.filename}`;
+        const fileBuffer = fs.readFileSync(f.path);
+        const contentType = f.mimetype || 'image/jpeg';
+        
+        const uploadResult = await storageSupabase.uploadPhoto(storagePath, fileBuffer, contentType);
+        if (uploadResult.ok && uploadResult.url) {
+          photoUrl = uploadResult.url;
+          photoPath = storagePath; // Store Storage path in database
+          console.log('[Upload] Uploaded to Storage:', photoUrl);
+          // Delete temp file
+          try {
+            fs.unlinkSync(f.path);
+          } catch (e) {
+            console.warn('[Upload] Could not delete temp file:', e.message);
+          }
+        } else {
+          console.error('[Upload] Storage upload failed:', uploadResult.error);
+          // Fallback to local path (will fail on Vercel but at least we log it)
+        }
+      }
+      
+      // Store in database: use Storage URL if available, otherwise local path
+      const dbPath = photoUrl || photoPath;
+      await db.addPhoto(albumId, dbPath, f.filename, order++);
     }
     res.json({ ok: true, count: files.length });
   } catch (err) {
-    res.status(500).json({ error: 'Sunucu hatası.' });
+    console.error('[Upload] Error:', err);
+    res.status(500).json({ error: 'Sunucu hatası: ' + err.message });
   }
 });
 
