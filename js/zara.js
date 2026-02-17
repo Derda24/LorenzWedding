@@ -22,6 +22,27 @@
     });
   }
 
+  /* Sağ üst dropdown (mobil: İletişim, Yardım, Müşteri girişi) */
+  var rightToggle = document.getElementById('zara-header-right-toggle');
+  var rightBlock = document.getElementById('zara-header-right');
+  if (rightToggle && rightBlock) {
+    rightToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isOpen = rightBlock.classList.toggle('is-open');
+      rightToggle.setAttribute('aria-expanded', isOpen);
+    });
+    document.addEventListener('click', function () {
+      rightBlock.classList.remove('is-open');
+      rightToggle.setAttribute('aria-expanded', 'false');
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        rightBlock.classList.remove('is-open');
+        rightToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
   if (overlay) {
     overlay.addEventListener('click', function (e) {
       if (e.target === overlay) {

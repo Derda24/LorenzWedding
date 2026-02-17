@@ -59,6 +59,19 @@ body.zara-body .header {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.25rem;
+  position: relative;
+}
+
+/* Desktop: toggle gizli, linkler doğrudan görünür */
+.zara-header__right-toggle {
+  display: none;
+}
+
+.zara-header__right-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
 }
 
 .zara-menu-btn {
@@ -394,27 +407,65 @@ body.zara-body .header {
   .zara-header__right {
     grid-area: header-right;
     justify-self: end;
+    flex-shrink: 0;
+  }
+
+  /* Mobil: üç nokta butonu görünsün, linkler dropdown'da */
+  .zara-header__right-toggle {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    gap: 0.2rem;
-    flex-shrink: 0;
-    min-width: max-content; /* Sağ sütunun daralmaması için */
+    gap: 3px;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--color-black);
+  }
+
+  .zara-header__right-toggle span {
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .zara-header__right-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.25rem;
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    background: var(--color-white);
+    border: 1px solid var(--color-stone);
+    box-shadow: var(--shadow-md);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .zara-header__right.is-open .zara-header__right-links {
+    display: flex;
+  }
+
+  .zara-header__right-links .zara-util-link {
+    font-size: 0.8rem;
+    padding: 0.6rem 1rem;
+    white-space: nowrap;
+  }
+
+  .zara-header__right-links .zara-util-link:hover {
+    background: var(--color-sand);
   }
 
   .zara-header__left .zara-side-label {
     display: none;
-  }
-
-  .zara-header__right .zara-util-link {
-    font-size: 0.6rem;
-    letter-spacing: 0.02em;
-    padding: 0.25rem 0;
-    line-height: 1.15;
-    min-height: 1.4rem;
-    display: block;
-    white-space: nowrap;
   }
 
   .zara-logo__text {
