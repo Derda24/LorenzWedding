@@ -191,23 +191,27 @@ function saveJsonToData(filename, data, res) {
   const useStorage = isVercelEnv && storageSupabase && storageSupabase.isAvailable();
   
   if (useStorage) {
-    console.log('Using Supabase Storage for:', filename);
-    console.log('Bucket:', storageSupabase.BUCKET);
-    console.log('Supabase URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
+    console.log('[Save] Using Supabase Storage for:', filename);
+    console.log('[Save] Bucket:', storageSupabase.BUCKET);
+    console.log('[Save] Supabase URL:', process.env.SUPABASE_URL ? 'Set' : 'Missing');
+    console.log('[Save] Service Role Key:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing');
+    
     storageSupabase.uploadJson(filename, data).then(function (result) {
       if (result.ok) {
-        console.log('Successfully uploaded to Storage:', filename);
+        console.log('[Save] Successfully uploaded to Storage:', filename);
         res.json({ ok: true });
       } else {
-        console.error('Storage upload failed:', filename, result.error);
+        console.error('[Save] Storage upload failed:', filename);
+        console.error('[Save] Error:', result.error);
+        console.error('[Save] Hint:', result.hint);
+        console.error('[Save] Code:', result.code);
         const errorMsg = result.error || 'Storage upload failed';
-        const hint = result.code === '404' || errorMsg.includes('Bucket not found') 
-          ? `Supabase Dashboard → Storage → "${storageSupabase.BUCKET}" bucket'ını oluşturun.`
-          : 'Supabase Storage yapılandırmasını kontrol edin.';
+        const hint = result.hint || 'Supabase Storage yapılandırmasını kontrol edin.';
         res.status(500).json({ ok: false, error: errorMsg, hint: hint });
       }
     }).catch(function (err) {
-      console.error('Save to Storage exception:', filename, err);
+      console.error('[Save] Save to Storage exception:', filename, err);
+      console.error('[Save] Exception stack:', err.stack);
       res.status(500).json({ 
         ok: false, 
         error: err.message || 'Storage upload exception',

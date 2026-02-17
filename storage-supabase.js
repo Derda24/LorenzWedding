@@ -26,27 +26,45 @@ async function uploadJson(filename, data) {
   }
   try {
     const body = JSON.stringify(data, null, 2);
+    console.log(`[Storage] Uploading ${filename} to bucket "${BUCKET}" (${body.length} bytes)`);
+    
     const { data: uploadData, error } = await supabase.storage
       .from(BUCKET)
       .upload(filename, body, { contentType: 'application/json', upsert: true });
     
     if (error) {
-      console.error('Supabase Storage upload error:', error);
+      console.error('[Storage] Upload error details:', JSON.stringify(error, null, 2));
+      console.error('[Storage] Error message:', error.message);
+      console.error('[Storage] Error statusCode:', error.statusCode);
+      console.error('[Storage] Error code:', error.code);
+      
       // Check for common errors
-      let errorMsg = error.message;
-      if (error.message && error.message.includes('Bucket not found')) {
-        errorMsg = `Bucket "${BUCKET}" bulunamadı. Supabase Dashboard → Storage → "${BUCKET}" bucket'ını oluşturun.`;
-      } else if (error.message && error.message.includes('new row violates row-level security')) {
-        errorMsg = `Bucket "${BUCKET}" için izin sorunu. Bucket'ı public yapın veya RLS politikalarını kontrol edin.`;
+      let errorMsg = error.message || 'Unknown storage error';
+      let hint = '';
+      
+      if (error.message && (error.message.includes('Bucket not found') || error.message.includes('does not exist'))) {
+        errorMsg = `Bucket "${BUCKET}" bulunamadı.`;
+        hint = `Supabase Dashboard → Storage → "${BUCKET}" bucket'ını oluşturun.`;
+      } else if (error.message && error.message.includes('row-level security') || error.message.includes('RLS')) {
+        errorMsg = `Bucket "${BUCKET}" için izin sorunu.`;
+        hint = `Bucket'ı public yapın: Storage → "${BUCKET}" → Settings → Public bucket: ON`;
+      } else if (error.statusCode === 403 || error.statusCode === 401) {
+        errorMsg = `Bucket "${BUCKET}" için yetkilendirme hatası.`;
+        hint = `SUPABASE_SERVICE_ROLE_KEY doğru mu? Bucket public mi?`;
+      } else if (error.statusCode === 400) {
+        errorMsg = `Geçersiz istek: ${error.message}`;
+        hint = `Bucket adı ve dosya adını kontrol edin.`;
       }
-      return { ok: false, error: errorMsg, code: error.statusCode || error.code };
+      
+      return { ok: false, error: errorMsg, hint: hint, code: error.statusCode || error.code, rawError: error.message };
     }
     
-    console.log('Upload successful:', filename, uploadData);
+    console.log('[Storage] Upload successful:', filename);
     return { ok: true };
   } catch (err) {
-    console.error('Supabase Storage upload exception:', err);
-    return { ok: false, error: err.message || 'Unknown error' };
+    console.error('[Storage] Upload exception:', err);
+    console.error('[Storage] Exception stack:', err.stack);
+    return { ok: false, error: err.message || 'Unknown error', hint: 'Supabase Storage bağlantısını kontrol edin.' };
   }
 }
 
