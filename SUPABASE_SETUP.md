@@ -1,6 +1,6 @@
-# Supabase Setup Guide for Lorenz Wedding
+# Supabase Setup Guide for LORENZWED
 
-This guide will help you set up Supabase as the database for your Lorenz Wedding website.
+This guide will help you set up Supabase as the database for your LORENZWED website.
 
 ## Why Supabase?
 

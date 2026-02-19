@@ -234,7 +234,7 @@
      * crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourpassword'))
      *   .then(h => console.log(Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join(''))); */
     const ADMIN_USER = 'İbrahim Hotface';
-    const ADMIN_PASS_HASH = '3f2d079e573fb4e66b315466b7054237d52c1993db6eeb9b58d87ae58b601ce0'; /* sha256('LorenzWedding.%16') */
+    const ADMIN_PASS_HASH = '3f2d079e573fb4e66b315466b7054237d52c1993db6eeb9b58d87ae58b601ce0'; /* sha256('LORENZWED.%16') */
 
     const SESSION_KEY = 'lorenz_admin_session';
 
@@ -255,6 +255,13 @@
     function setLoggedIn(val) {
       if (val) sessionStorage.setItem(SESSION_KEY, '1');
       else sessionStorage.removeItem(SESSION_KEY);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      var div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
     }
 
     function showAdmin() {
@@ -529,7 +536,7 @@
       const list = document.getElementById('photo-list');
       list.innerHTML = galleryData.items.map(function (item) {
         return '<li data-id="' + item.id + '">' +
-          '<img src="' + (item.image || '') + '" alt="">' +
+          '<img src="' + (item.image || '') + '" alt="' + (escapeHtml(item.title || 'Fotoğraf') + '">' +
           '<div class="item-info">' +
           '<span class="item-title">' + (item.title || '') + '</span>' +
           '<span class="item-subtitle">' + (item.subtitle || '') + '</span>' +

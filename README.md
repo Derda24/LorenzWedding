@@ -1,4 +1,4 @@
-# Lorenz Wedding Photo & Film
+# LORENZWED Photo & Film
 
 Wedding and special occasions photography website.
 
@@ -97,7 +97,7 @@ The app automatically uses:
 ### Current Admin Credentials
 
 - **Username**: İbrahim Hotface
-- **Password**: LorenzWedding.%16
+- **Password**: LORENZWED.%16
 
 ## Project Structure
 

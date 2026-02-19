@@ -69,7 +69,7 @@
     <button class="lightbox__close" id="lightbox-close" aria-label="Kapat">&times;</button>
     <button class="lightbox__nav lightbox__nav--prev" id="lightbox-prev" aria-label="Önceki fotoğraf">‹</button>
     <button class="lightbox__nav lightbox__nav--next" id="lightbox-next" aria-label="Sonraki fotoğraf">›</button>
-    <img class="lightbox__image" id="lightbox-image" src="" alt="">
+    <img class="lightbox__image" id="lightbox-image" src="" alt="Fotoğraf görüntüleme">
     <button class="lightbox__select" id="lightbox-select">Seç</button>
     <div class="lightbox__info" id="lightbox-info"></div>
   </div>
@@ -184,7 +184,7 @@
             grid.innerHTML = allPhotos.map(function (p, idx) {
               var sel = selectedIds.indexOf(p.id) !== -1 ? ' selected' : '';
               return '<div class="customer-panel__photo' + sel + '" data-id="' + p.id + '" data-index="' + idx + '" role="button" tabindex="0">' +
-                '<img src="' + p.url + '" alt="" loading="lazy" onerror="console.error(\'[Panel] Image failed to load:\', this.src);">' +
+                '<img src="' + p.url + '" alt="Fotoğraf ' + (idx + 1) + '" loading="lazy" onerror="console.error(\'[Panel] Image failed to load:\', this.src);">' +
                 (sel ? '<span class="tick">✓</span>' : '') +
                 '</div>';
             }).join('');

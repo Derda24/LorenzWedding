@@ -198,7 +198,7 @@
                         selected.map(function (p) {
                           var code = 'Kod: ' + p.id;
                           if (p.filename) code += ' · ' + String(p.filename).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-                          return '<div class="ac-selected-grid__item"><img src="' + p.url + '" alt=""><span class="ac-selected-grid__code">' + code + '</span></div>';
+                          return '<div class="ac-selected-grid__item"><img src="' + p.url + '" alt="Seçilen fotoğraf ' + p.id + '"><span class="ac-selected-grid__code">' + code + '</span></div>';
                         }).join('') +
                         '</div>';
                     }
