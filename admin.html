@@ -103,7 +103,7 @@
           <label for="photo-file">Veya bilgisayardan yükle</label>
           <input type="file" id="photo-file" accept="image/*">
           <p id="photo-file-name" style="font-size: 0.75rem; color: var(--color-grey); margin-top: 0.25rem;"></p>
-          <p style="font-size: 0.7rem; color: var(--color-grey); margin-top: 0.25rem;">Bilgisayardan seçtiğiniz görsel JSON içine gömülür; çok sayıda veya büyük dosyada gallery.json büyüyebilir.</p>
+          <p style="font-size: 0.7rem; color: var(--color-grey); margin-top: 0.25rem;">Dosya seçince görsel önce sunucuya yüklenir (URL kullanılır); böylece "Siteye kaydet" 413 hatası vermez.</p>
         </div>
         <div>
           <label for="photo-title">Başlık</label>
@@ -596,12 +596,35 @@
         nameEl.textContent = '';
         return;
       }
-      nameEl.textContent = file.name;
-      var reader = new FileReader();
-      reader.onload = function () {
-        photoUploadDataUrl = reader.result;
-      };
-      reader.readAsDataURL(file);
+      nameEl.textContent = file.name + ' – yükleniyor...';
+      var secret = sessionStorage.getItem('adminSecret');
+      var fd = new FormData();
+      fd.append('image', file);
+      var opts = { method: 'POST', body: fd };
+      if (secret) opts.headers = { 'X-Admin-Secret': secret };
+      fetch('/api/admin/upload-gallery-image', opts)
+        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+        .then(function (result) {
+          if (result.ok && result.data && result.data.url) {
+            photoUploadDataUrl = result.data.url;
+            nameEl.textContent = file.name + ' ✓';
+          } else {
+            var reader = new FileReader();
+            reader.onload = function () {
+              photoUploadDataUrl = reader.result;
+              nameEl.textContent = file.name + ' (yerel; Siteye kaydet büyük payload’da 413 verebilir)';
+            };
+            reader.readAsDataURL(file);
+          }
+        })
+        .catch(function () {
+          var reader = new FileReader();
+          reader.onload = function () {
+            photoUploadDataUrl = reader.result;
+            nameEl.textContent = file.name + ' (yerel)';
+          };
+          reader.readAsDataURL(file);
+        });
     });
 
     document.getElementById('photo-form').addEventListener('submit', function (e) {
@@ -669,6 +692,8 @@
           showMessage(label + ' siteye kaydedildi. Sayfayı yenileyerek görebilirsiniz.');
         } else if (res.status === 403) {
           showMessage('Yetkisiz. Tekrar giriş yapın.', 'error');
+        } else if (res.status === 413) {
+          showMessage('İstek çok büyük (413). Galeri görselleri için URL kullanın veya yeni eklediğiniz fotoğrafları dosyadan seçin (önce sunucuya yüklenir). Eski base64 görselleri kaldırıp "Siteye kaydet"i tekrar deneyin; veya "JSON İndir" ile dosyayı data/ klasörüne kopyalayın.', 'error');
         } else {
           // Try to get error message from response
           res.json().then(function (body) {
@@ -681,8 +706,7 @@
             showMessage(msg, 'error');
           }).catch(function (err) {
             console.error('[Admin] JSON parse error:', err);
-            // If JSON parsing fails, show generic error
-            var statusMsg = res.status === 503 ? 'Vercel\'de dosya yazma desteklenmiyor. Yerel sunucuda (npm start) çalıştırın.' : 'Kaydetme başarısız (Status: ' + res.status + ').';
+            var statusMsg = res.status === 503 ? 'Vercel\'de dosya yazma desteklenmiyor. Yerel sunucuda (npm start) çalıştırın.' : (res.status === 413 ? 'İstek çok büyük (413). Galeri için görsel URL kullanın veya dosyadan ekleyin (yükleme ile).' : 'Kaydetme başarısız (Status: ' + res.status + ').');
             console.error('[Admin] Status error:', statusMsg);
             showMessage(statusMsg, 'error');
           });

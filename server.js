@@ -684,6 +684,27 @@ app.post('/api/admin/albums/:id/photos', adminAuth, upload.array('photos', 50), 
   }
 });
 
+// Single image upload for admin gallery (avoids 413: gallery JSON stays under 4.5 MB)
+app.post('/api/admin/upload-gallery-image', adminAuth, upload.single('image'), async function (req, res) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Görsel dosyası gerekli.' });
+    if (!isVercelEnv || !storageSupabase || !storageSupabase.isAvailable()) {
+      return res.status(503).json({ error: 'Galeri görseli yükleme yalnızca Vercel + Supabase ile kullanılır. Görsel URL kullanın veya JSON İndir ile data/ klasörüne kopyalayın.' });
+    }
+    const f = req.file;
+    const storagePath = 'gallery/' + Date.now() + '-' + (f.originalname || 'image').replace(/[^a-zA-Z0-9._-]/g, '_');
+    const fileBuffer = fs.readFileSync(f.path);
+    const contentType = f.mimetype || 'image/jpeg';
+    const uploadResult = await storageSupabase.uploadPhoto(storagePath, fileBuffer, contentType);
+    try { fs.unlinkSync(f.path); } catch (e) {}
+    if (!uploadResult.ok) return res.status(500).json({ error: uploadResult.error || 'Yükleme başarısız.' });
+    res.json({ ok: true, url: uploadResult.url });
+  } catch (err) {
+    console.error('[Upload] Gallery image error:', err);
+    res.status(500).json({ error: 'Sunucu hatası: ' + err.message });
+  }
+});
+
 // Serve uploads directory (only if directory exists or can be created)
 try {
   const uploadsStaticDir = isVercelEnv ? path.join(__dirname, '..', 'uploads') : UPLOADS_DIR;
