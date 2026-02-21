@@ -588,6 +588,32 @@
 
     var photoUploadDataUrl = null;
 
+    function compressImageForUpload(file) {
+      return new Promise(function (resolve, reject) {
+        var img = new Image();
+        var url = URL.createObjectURL(file);
+        img.onload = function () {
+          URL.revokeObjectURL(url);
+          var max = 1920;
+          var w = img.naturalWidth;
+          var h = img.naturalHeight;
+          if (w > max || h > max) {
+            if (w > h) { h = Math.round(h * max / w); w = max; } else { w = Math.round(w * max / h); h = max; }
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob(function (blob) {
+            if (blob) resolve(blob); else reject(new Error('toBlob failed'));
+          }, 'image/jpeg', 0.82);
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Image load failed')); };
+        img.src = url;
+      });
+    }
+
     document.getElementById('photo-file').addEventListener('change', function () {
       var file = this.files[0];
       var nameEl = document.getElementById('photo-file-name');
@@ -596,35 +622,37 @@
         nameEl.textContent = '';
         return;
       }
-      nameEl.textContent = file.name + ' – yükleniyor...';
-      var secret = sessionStorage.getItem('adminSecret');
-      var fd = new FormData();
-      fd.append('image', file);
-      var opts = { method: 'POST', body: fd };
-      if (secret) opts.headers = { 'X-Admin-Secret': secret };
-      fetch('/api/admin/upload-gallery-image', opts)
-        .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
-        .then(function (result) {
-          if (result.ok && result.data && result.data.url) {
-            photoUploadDataUrl = result.data.url;
-            nameEl.textContent = file.name + ' ✓';
-          } else {
-            var reader = new FileReader();
-            reader.onload = function () {
-              photoUploadDataUrl = reader.result;
-              nameEl.textContent = file.name + ' (yerel; Siteye kaydet büyük payload’da 413 verebilir)';
-            };
-            reader.readAsDataURL(file);
-          }
-        })
-        .catch(function () {
-          var reader = new FileReader();
-          reader.onload = function () {
-            photoUploadDataUrl = reader.result;
-            nameEl.textContent = file.name + ' (yerel)';
-          };
-          reader.readAsDataURL(file);
-        });
+      nameEl.textContent = file.name + ' – sıkıştırılıyor...';
+      compressImageForUpload(file).then(function (blob) {
+        nameEl.textContent = file.name + ' – yükleniyor...';
+        var secret = sessionStorage.getItem('adminSecret');
+        var fd = new FormData();
+        fd.append('image', blob, (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg');
+        var opts = { method: 'POST', body: fd };
+        if (secret) opts.headers = { 'X-Admin-Secret': secret };
+        return fetch('/api/admin/upload-gallery-image', opts)
+          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+          .then(function (result) {
+            if (result.ok && result.data && result.data.url) {
+              photoUploadDataUrl = result.data.url;
+              nameEl.textContent = file.name + ' ✓';
+            } else {
+              var reader = new FileReader();
+              reader.onload = function () {
+                photoUploadDataUrl = reader.result;
+                nameEl.textContent = file.name + ' (yerel; Siteye kaydet büyük payload\'da 413 verebilir)';
+              };
+              reader.readAsDataURL(file);
+            }
+          });
+      }).catch(function () {
+        var reader = new FileReader();
+        reader.onload = function () {
+          photoUploadDataUrl = reader.result;
+          nameEl.textContent = file.name + ' (yerel)';
+        };
+        reader.readAsDataURL(file);
+      });
     });
 
     document.getElementById('photo-form').addEventListener('submit', function (e) {
