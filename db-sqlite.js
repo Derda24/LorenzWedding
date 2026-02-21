@@ -152,6 +152,33 @@ function initSchema() {
   return Promise.resolve();
 }
 
+function getGalleryItems() {
+  const fp = path.join(DATA_DIR, 'gallery.json');
+  try {
+    if (fs.existsSync(fp)) {
+      const raw = fs.readFileSync(fp, 'utf8');
+      const data = JSON.parse(raw);
+      return Array.isArray(data.items) ? data.items : [];
+    }
+  } catch (e) {}
+  return [];
+}
+
+function replaceGalleryItemsChunk(replace, items) {
+  const fp = path.join(DATA_DIR, 'gallery.json');
+  let current = [];
+  if (!replace && fs.existsSync(fp)) {
+    try {
+      const raw = fs.readFileSync(fp, 'utf8');
+      const data = JSON.parse(raw);
+      current = Array.isArray(data.items) ? data.items : [];
+    } catch (e) {}
+  }
+  const next = replace ? (items || []) : current.concat(items || []);
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(fp, JSON.stringify({ items: next }, null, 2), 'utf8');
+}
+
 module.exports = {
   getDb,
   initSchema,
@@ -166,5 +193,7 @@ module.exports = {
   setAlbumSelection,
   approveAlbum,
   getAllCustomers,
-  getAlbumsByCustomerId
+  getAlbumsByCustomerId,
+  getGalleryItems,
+  replaceGalleryItemsChunk
 };

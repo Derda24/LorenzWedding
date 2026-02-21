@@ -195,6 +195,47 @@ async function getAlbumsByCustomerId(customerId) {
   return data || [];
 }
 
+// Gallery items (admin site gallery - stored in DB to avoid 413)
+async function getGalleryItems() {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('gallery_items')
+    .select('item_id, image, title, subtitle, category, sort_order')
+    .order('sort_order', { ascending: true })
+    .order('id', { ascending: true });
+  if (error) return [];
+  return (data || []).map(function (row) {
+    return {
+      id: row.item_id,
+      image: row.image,
+      title: row.title || '',
+      subtitle: row.subtitle || '',
+      category: row.category || 'all'
+    };
+  });
+}
+
+async function replaceGalleryItemsChunk(replace, items) {
+  if (!supabase) throw new Error('Supabase not configured');
+  if (replace) {
+    const { error: delErr } = await supabase.from('gallery_items').delete().neq('id', null);
+    if (delErr) throw delErr;
+  }
+  if (!items || items.length === 0) return;
+  const rows = items.map(function (item, idx) {
+    return {
+      item_id: String(item.id || ''),
+      image: String(item.image || ''),
+      title: item.title || null,
+      subtitle: item.subtitle || null,
+      category: item.category || null,
+      sort_order: idx
+    };
+  });
+  const { error } = await supabase.from('gallery_items').insert(rows);
+  if (error) throw error;
+}
+
 module.exports = {
   getDb,
   initSchema,
@@ -209,5 +250,7 @@ module.exports = {
   setAlbumSelection,
   approveAlbum,
   getAllCustomers,
-  getAlbumsByCustomerId
+  getAlbumsByCustomerId,
+  getGalleryItems,
+  replaceGalleryItemsChunk
 };

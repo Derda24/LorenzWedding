@@ -62,7 +62,7 @@ app.use(function (req, res, next) {
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live; " + // unsafe-eval and Vercel Live
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " + // Google Fonts CSS
     "font-src 'self' data: https://fonts.gstatic.com; " + // Google Fonts fonts
-    "img-src 'self' data: https:; " + // All HTTPS images
+    "img-src 'self' data: blob: https:; " + // blob: for admin image compression
     "connect-src 'self' https://*.supabase.co https://vercel.live; " + // Supabase API and Vercel Live
     "frame-src 'self' https://vercel.live https://www.youtube.com https://www.youtube-nocookie.com; " + // Vercel Live + YouTube embeds
     "frame-ancestors 'none';"
@@ -252,6 +252,16 @@ app.get('/api/data/:filename', function (req, res) {
     return res.status(404).json({ error: 'Not found' });
   }
   (async function () {
+    if (filename === 'gallery.json' && db.getGalleryItems) {
+      try {
+        const items = await db.getGalleryItems();
+        if (Array.isArray(items)) {
+          return res.json({ items: items });
+        }
+      } catch (e) {
+        console.warn('Gallery from DB failed:', e.message);
+      }
+    }
     if (storageSupabase && storageSupabase.isAvailable()) {
       const { data, error } = await storageSupabase.getJson(filename);
       if (error) {
@@ -345,6 +355,21 @@ function saveJsonToData(filename, data, res) {
 
 app.post('/api/save-gallery', adminAuth, function (req, res) {
   saveJsonToData('gallery.json', req.body, res);
+});
+
+app.post('/api/admin/gallery/sync', adminAuth, async function (req, res) {
+  try {
+    if (!db.replaceGalleryItemsChunk) return res.status(503).json({ error: 'Galeri tablosu yok. supabase-migration.sql içinde gallery_items tablosunu oluşturun.' });
+    const replace = !!req.body.replace;
+    let items = req.body.items;
+    if (!Array.isArray(items)) items = [];
+    if (items.length > 30) return res.status(400).json({ error: 'En fazla 30 öğe gönderin.' });
+    await db.replaceGalleryItemsChunk(replace, items);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Gallery sync]', err);
+    res.status(500).json({ error: err.message || 'Galeri sync hatası.' });
+  }
 });
 app.post('/api/save-videos', adminAuth, function (req, res) {
   saveJsonToData('videos.json', req.body, res);

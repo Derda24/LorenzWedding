@@ -31,6 +31,19 @@ CREATE TABLE IF NOT EXISTS photos (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Gallery items (admin site gallery - avoids 413 by storing in DB instead of one big JSON)
+CREATE TABLE IF NOT EXISTS gallery_items (
+  id BIGSERIAL PRIMARY KEY,
+  item_id TEXT NOT NULL,
+  image TEXT NOT NULL,
+  title TEXT,
+  subtitle TEXT,
+  category TEXT,
+  sort_order INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_gallery_items_order ON gallery_items(sort_order);
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_albums_customer ON albums(customer_id);
 CREATE INDEX IF NOT EXISTS idx_photos_album ON photos(album_id);
