@@ -52,3 +52,6 @@ CREATE INDEX IF NOT EXISTS idx_photos_album ON photos(album_id);
 -- ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE albums ENABLE ROW LEVEL SECURITY;
 -- ALTER TABLE photos ENABLE ROW LEVEL SECURITY;
+-- If you enable RLS on gallery_items, allow service role full access (backend uses service role key):
+-- ALTER TABLE gallery_items ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "Service role full access gallery_items" ON gallery_items FOR ALL USING (true) WITH CHECK (true);

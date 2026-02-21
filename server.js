@@ -369,7 +369,11 @@ app.post('/api/admin/gallery/sync', adminAuth, async function (req, res) {
     res.json({ ok: true });
   } catch (err) {
     console.error('[Gallery sync]', err);
-    res.status(500).json({ error: err.message || 'Galeri sync hatası.' });
+    const msg = err.message || 'Galeri sync hatası.';
+    const body = { error: msg };
+    if (err.code) body.code = err.code;
+    if (err.details) body.details = err.details;
+    res.status(500).json(body);
   }
 });
 app.post('/api/save-videos', adminAuth, function (req, res) {

@@ -218,7 +218,8 @@ async function getGalleryItems() {
 async function replaceGalleryItemsChunk(replace, items) {
   if (!supabase) throw new Error('Supabase not configured');
   if (replace) {
-    const { error: delErr } = await supabase.from('gallery_items').delete().neq('id', null);
+    // Delete all rows: id is BIGSERIAL so id >= 0 matches every row
+    const { error: delErr } = await supabase.from('gallery_items').delete().gte('id', 0);
     if (delErr) throw delErr;
   }
   if (!items || items.length === 0) return;
