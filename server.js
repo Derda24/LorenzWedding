@@ -255,9 +255,10 @@ app.get('/api/data/:filename', function (req, res) {
     if (filename === 'gallery.json' && db.getGalleryItems) {
       try {
         const items = await db.getGalleryItems();
-        if (Array.isArray(items)) {
+        if (Array.isArray(items) && items.length > 0) {
           return res.json({ items: items });
         }
+        // Table empty: fall back to Storage/file so save-gallery (Storage) still shows
       } catch (e) {
         console.warn('Gallery from DB failed:', e.message);
       }

@@ -744,8 +744,57 @@
       });
     }
 
+    function saveGalleryToSite() {
+      var items = (galleryData && galleryData.items) ? galleryData.items : [];
+      var secret = sessionStorage.getItem('adminSecret');
+      var headers = { 'Content-Type': 'application/json' };
+      if (secret) headers['X-Admin-Secret'] = secret;
+      var CHUNK = 25;
+      var chunks = [];
+      for (var i = 0; i < items.length; i += CHUNK) {
+        chunks.push(items.slice(i, i + CHUNK));
+      }
+      if (chunks.length === 0) {
+        chunks.push([]);
+      }
+      var index = 0;
+      function sendNext() {
+        if (index >= chunks.length) {
+          showMessage('Fotoğraflar siteye kaydedildi (Supabase). Sayfayı yenileyerek görebilirsiniz.');
+          return;
+        }
+        var replace = (index === 0);
+        var body = { replace: replace, items: chunks[index] };
+        console.log('[Admin] Gallery sync chunk', index + 1, '/', chunks.length);
+        fetch('/api/admin/gallery/sync', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(body)
+        }).then(function (res) {
+          if (res.ok) {
+            index++;
+            sendNext();
+          } else if (res.status === 503) {
+            console.log('[Admin] Gallery sync not available, fallback to save-gallery');
+            saveToSite('/api/save-gallery', galleryData, 'Fotoğraflar');
+          } else if (res.status === 403) {
+            showMessage('Yetkisiz. Tekrar giriş yapın.', 'error');
+          } else {
+            res.json().then(function (data) {
+              showMessage((data && data.error) ? data.error : 'Galeri kaydedilemedi.', 'error');
+            }).catch(function () {
+              showMessage('Galeri kaydedilemedi (Status: ' + res.status + ').', 'error');
+            });
+          }
+        }).catch(function () {
+          showMessage('Sunucu çalışmıyor. Tekrar deneyin veya JSON İndir kullanın.', 'error');
+        });
+      }
+      sendNext();
+    }
+
     document.getElementById('save-gallery').addEventListener('click', function () {
-      saveToSite('/api/save-gallery', galleryData, 'Fotoğraflar');
+      saveGalleryToSite();
     });
 
     document.getElementById('save-videos').addEventListener('click', function () {
