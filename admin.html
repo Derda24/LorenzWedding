@@ -536,7 +536,7 @@
       const list = document.getElementById('photo-list');
       list.innerHTML = galleryData.items.map(function (item) {
         return '<li data-id="' + item.id + '">' +
-          '<img src="' + (item.image || '') + '" alt="' + (escapeHtml(item.title || 'Fotoğraf') + '">' +
+          '<img src="' + (item.image || '') + '" alt="' + escapeHtml(item.title || 'Fotoğraf') + '">' +
           '<div class="item-info">' +
           '<span class="item-title">' + (item.title || '') + '</span>' +
           '<span class="item-subtitle">' + (item.subtitle || '') + '</span>' +
