@@ -802,6 +802,10 @@
     });
 
     document.getElementById('save-featured').addEventListener('click', function () {
+      featuredData.hero = {
+        image: document.getElementById('hero-image').value || '',
+        title: document.getElementById('hero-title').value || 'Yeni'
+      };
       saveToSite('/api/save-featured', featuredData, 'Ana sayfa');
     });
 
