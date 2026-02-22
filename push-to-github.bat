@@ -1,6 +1,6 @@
 @echo off
 cd /d "c:\Users\turlu\Lorenz Wedding"
 git add -A
-git commit -m "Add hero image upload from computer; update push script"
+git commit -m "Admin: 4 featured photos + Hakkımızda editable from JSON; about.json and content.js"
 git push origin main
 pause

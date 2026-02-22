@@ -88,6 +88,7 @@
       <a href="#section-photos">Fotoğraflar</a>
       <a href="#section-videos">Videolar</a>
       <a href="#section-featured">Ana Sayfa</a>
+      <a href="#section-about">Hakkımızda</a>
       <a href="#section-services">Hizmetler</a>
     </nav>
 
@@ -223,6 +224,66 @@
       <div class="admin-actions">
         <button type="button" class="btn btn--accent" id="save-featured">Siteye kaydet</button>
         <button type="button" class="btn" id="export-featured" style="border: 1px solid var(--color-black); background: transparent;">featured.json İndir</button>
+      </div>
+    </section>
+
+    <!-- Hakkımızda -->
+    <section class="admin-section" id="section-about">
+      <h2>Hakkımızda</h2>
+      <p style="font-size: 0.8rem; color: var(--color-grey); margin-bottom: 1.25rem;">Hakkımızda sayfasındaki metin ve ekip bilgilerini düzenleyin. Görseller için URL girin veya bilgisayardan dosya seçin.</p>
+      <form class="admin-form" id="about-form">
+        <div>
+          <label for="about-page-title">Sayfa başlığı</label>
+          <input type="text" id="about-page-title" placeholder="Hakkımızda">
+        </div>
+        <div style="padding: 1rem; border: 1px solid var(--color-stone); background: var(--color-cream, #fafafa);">
+          <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;">Giriş bölümü</h3>
+          <div class="admin-form">
+            <label for="about-intro-title">Giriş başlığı</label>
+            <input type="text" id="about-intro-title" placeholder="Bizim Hikayemiz">
+            <label for="about-intro-p1">Paragraf 1</label>
+            <textarea id="about-intro-p1" rows="3" placeholder="İlk paragraf metni"></textarea>
+            <label for="about-intro-p2">Paragraf 2</label>
+            <textarea id="about-intro-p2" rows="3" placeholder="İkinci paragraf metni"></textarea>
+            <label for="about-intro-image">Giriş görseli URL</label>
+            <input type="text" id="about-intro-image" placeholder="https://... veya dosya seçin">
+            <label for="about-intro-file">Bilgisayardan görsel seç</label>
+            <input type="file" id="about-intro-file" accept="image/*">
+            <p id="about-intro-file-name" style="font-size: 0.75rem; color: var(--color-grey); margin-top: 0.25rem;"></p>
+          </div>
+        </div>
+        <div>
+          <label for="about-team-label">Ekip bölümü başlığı</label>
+          <input type="text" id="about-team-label" placeholder="Ekip">
+        </div>
+        <div style="padding: 1rem; border: 1px solid var(--color-stone); background: var(--color-cream, #fafafa);">
+          <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;">Ekip üyeleri (3 kişi)</h3>
+          <div class="admin-form">
+            <div class="services-card" style="margin-bottom: 1rem;">
+              <div class="services-card__row full"><label>1. İsim</label><input type="text" id="about-team1-name" placeholder="Ahmet Yılmaz"></div>
+              <div class="services-card__row full"><label>1. Ünvan</label><input type="text" id="about-team1-role" placeholder="Baş Fotoğrafçı"></div>
+              <div class="services-card__row full"><label>1. Görsel URL</label><input type="text" id="about-team1-image" placeholder="URL veya dosya seçin"></div>
+              <div><label>1. Dosya seç</label><input type="file" id="about-team1-file" accept="image/*" data-team="1"><p id="about-team1-file-name" style="font-size: 0.75rem; color: var(--color-grey);"></p></div>
+            </div>
+            <div class="services-card" style="margin-bottom: 1rem;">
+              <div class="services-card__row full"><label>2. İsim</label><input type="text" id="about-team2-name" placeholder="Zeynep Kaya"></div>
+              <div class="services-card__row full"><label>2. Ünvan</label><input type="text" id="about-team2-role" placeholder="Videograf & Editör"></div>
+              <div class="services-card__row full"><label>2. Görsel URL</label><input type="text" id="about-team2-image" placeholder="URL veya dosya seçin"></div>
+              <div><label>2. Dosya seç</label><input type="file" id="about-team2-file" accept="image/*" data-team="2"><p id="about-team2-file-name" style="font-size: 0.75rem; color: var(--color-grey);"></p></div>
+            </div>
+            <div class="services-card">
+              <div class="services-card__row full"><label>3. İsim</label><input type="text" id="about-team3-name" placeholder="Mehmet Demir"></div>
+              <div class="services-card__row full"><label>3. Ünvan</label><input type="text" id="about-team3-role" placeholder="Organizasyon Koordinatörü"></div>
+              <div class="services-card__row full"><label>3. Görsel URL</label><input type="text" id="about-team3-image" placeholder="URL veya dosya seçin"></div>
+              <div><label>3. Dosya seç</label><input type="file" id="about-team3-file" accept="image/*" data-team="3"><p id="about-team3-file-name" style="font-size: 0.75rem; color: var(--color-grey);"></p></div>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn--accent">Güncelle</button>
+      </form>
+      <div class="admin-actions">
+        <button type="button" class="btn btn--accent" id="save-about">Siteye kaydet</button>
+        <button type="button" class="btn" id="export-about" style="border: 1px solid var(--color-black); background: transparent;">about.json İndir</button>
       </div>
     </section>
 
@@ -393,6 +454,7 @@
     let galleryData = { categories: GALLERY_CATEGORIES, items: [] };
     let videosData = { items: [] };
     let featuredData = { hero: {}, imageBlocks: [], articles: [] };
+    let aboutData = { pageTitle: '', intro: { title: '', paragraphs: [], image: '' }, teamLabel: '', team: [] };
 
     function showMessage(text, type) {
       const el = document.getElementById('admin-message');
@@ -436,11 +498,64 @@
           }
         });
 
+      fetch('/api/data/about.json')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (d) aboutData = d;
+          fillAboutForm();
+        });
+
       fetch('/api/data/services.json')
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (d) {
           if (d) fillServicesForm(d);
         });
+    }
+
+    function fillAboutForm() {
+      var d = aboutData;
+      document.getElementById('about-page-title').value = d.pageTitle || '';
+      var intro = d.intro || {};
+      document.getElementById('about-intro-title').value = intro.title || '';
+      var paras = intro.paragraphs || [];
+      document.getElementById('about-intro-p1').value = paras[0] || '';
+      document.getElementById('about-intro-p2').value = paras[1] || '';
+      document.getElementById('about-intro-image').value = intro.image || '';
+      document.getElementById('about-team-label').value = d.teamLabel || 'Ekip';
+      var team = d.team || [];
+      for (var i = 1; i <= 3; i++) {
+        var m = team[i - 1] || {};
+        var elName = document.getElementById('about-team' + i + '-name');
+        var elRole = document.getElementById('about-team' + i + '-role');
+        var elImg = document.getElementById('about-team' + i + '-image');
+        if (elName) elName.value = m.name || '';
+        if (elRole) elRole.value = m.role || '';
+        if (elImg) elImg.value = m.image || '';
+      }
+    }
+
+    function getAboutFromForm() {
+      var team = [];
+      for (var i = 1; i <= 3; i++) {
+        team.push({
+          name: (document.getElementById('about-team' + i + '-name') || {}).value || '',
+          role: (document.getElementById('about-team' + i + '-role') || {}).value || '',
+          image: (document.getElementById('about-team' + i + '-image') || {}).value || ''
+        });
+      }
+      return {
+        pageTitle: (document.getElementById('about-page-title') || {}).value || 'Hakkımızda',
+        intro: {
+          title: (document.getElementById('about-intro-title') || {}).value || '',
+          paragraphs: [
+            (document.getElementById('about-intro-p1') || {}).value || '',
+            (document.getElementById('about-intro-p2') || {}).value || ''
+          ],
+          image: (document.getElementById('about-intro-image') || {}).value || ''
+        },
+        teamLabel: (document.getElementById('about-team-label') || {}).value || 'Ekip',
+        team: team
+      };
     }
 
     function fillServicesForm(data) {
@@ -863,7 +978,61 @@
         }).catch(function () {
           if (nameEl) nameEl.textContent = file.name + ' – işlenemedi.';
         });
+        });
+    });
+
+    document.getElementById('about-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      aboutData = getAboutFromForm();
+      showMessage('Hakkımızda ayarları güncellendi. Siteye kaydet veya about.json indir.');
+    });
+
+    function uploadImageThenSetInput(file, urlInputId, nameElId) {
+      if (!file || !file.type.startsWith('image/')) return;
+      var nameEl = document.getElementById(nameElId);
+      var urlInput = document.getElementById(urlInputId);
+      if (nameEl) nameEl.textContent = file.name + ' – yükleniyor...';
+      compressImageForUpload(file).then(function (blob) {
+        var secret = sessionStorage.getItem('adminSecret');
+        var fd = new FormData();
+        fd.append('image', blob, (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg');
+        var opts = { method: 'POST', body: fd };
+        if (secret) opts.headers = { 'X-Admin-Secret': secret };
+        return fetch('/api/admin/upload-hero-image', opts)
+          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+          .then(function (result) {
+            if (result.ok && result.data && result.data.url && urlInput) {
+              urlInput.value = result.data.url;
+              if (nameEl) nameEl.textContent = file.name + ' ✓';
+            } else {
+              if (nameEl) nameEl.textContent = (result.data && result.data.error) ? result.data.error : 'Yükleme başarısız.';
+            }
+          });
+      }).catch(function () {
+        if (nameEl) nameEl.textContent = file.name + ' – işlenemedi.';
       });
+    }
+
+    document.getElementById('about-intro-file').addEventListener('change', function () {
+      var file = this.files[0];
+      uploadImageThenSetInput(file, 'about-intro-image', 'about-intro-file-name');
+    });
+    [1, 2, 3].forEach(function (i) {
+      document.getElementById('about-team' + i + '-file').addEventListener('change', function () {
+        var file = this.files[0];
+        uploadImageThenSetInput(file, 'about-team' + i + '-image', 'about-team' + i + '-file-name');
+      });
+    });
+
+    document.getElementById('save-about').addEventListener('click', function () {
+      aboutData = getAboutFromForm();
+      saveToSite('/api/save-about', aboutData, 'Hakkımızda');
+    });
+
+    document.getElementById('export-about').addEventListener('click', function () {
+      aboutData = getAboutFromForm();
+      downloadJSON('about.json', aboutData);
+      showMessage('about.json indirildi. data/ klasörüne koyup yeniden yayınlayın.');
     });
 
     function saveToSite(apiPath, data, label) {

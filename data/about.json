@@ -1,0 +1,29 @@
+{
+  "pageTitle": "Hakkımızda",
+  "intro": {
+    "title": "Bizim Hikayemiz",
+    "paragraphs": [
+      "LORENZWED Photo & Film olarak, her düğünün benzersiz bir hikaye olduğuna inanıyoruz. Hatay ve çevresinde yıllardır çiftlerin en özel günlerini fotoğraf ve video ile ölümsüzleştiriyoruz.",
+      "Profesyonel ekipmanlarımız, deneyimli kadromuz ve yaratıcı bakış açımızla, anılarınızı en güzel şekilde kaydediyoruz."
+    ],
+    "image": "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600"
+  },
+  "teamLabel": "Ekip",
+  "team": [
+    {
+      "name": "Ahmet Yılmaz",
+      "role": "Baş Fotoğrafçı",
+      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400"
+    },
+    {
+      "name": "Zeynep Kaya",
+      "role": "Videograf & Editör",
+      "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400"
+    },
+    {
+      "name": "Mehmet Demir",
+      "role": "Organizasyon Koordinatörü",
+      "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400"
+    }
+  ]
+}

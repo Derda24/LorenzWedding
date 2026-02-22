@@ -288,6 +288,48 @@
   }
 
   /**
+   * Render about page from JSON
+   */
+  function renderAbout(containerId, data) {
+    const container = document.getElementById(containerId);
+    if (!container || !data) return;
+
+    let html = '';
+    if (data.pageTitle) {
+      html += '<h1 class="zara-hero__title" style="color: var(--color-black); font-size: 1.5rem; margin-bottom: 2rem;">' + escapeHtml(data.pageTitle) + '</h1>';
+    }
+    const intro = data.intro || {};
+    const paragraphs = intro.paragraphs || [];
+    html += '<div class="about-intro" style="margin-bottom: 4rem;">';
+    html += '<div class="about-intro__content">';
+    if (intro.title) html += '<h2 style="font-family: var(--font-display); font-size: 1.25rem; margin-bottom: 1.5rem;">' + escapeHtml(intro.title) + '</h2>';
+    paragraphs.forEach(function (p) {
+      if (p) html += '<p>' + escapeHtml(p) + '</p>';
+    });
+    html += '</div>';
+    html += '<div class="about-intro__image">';
+    if (intro.image) {
+      html += '<img src="' + escapeHtml(intro.image) + '" alt="LORENZWED ekibi" loading="lazy" width="600" height="400">';
+    }
+    html += '</div></div>';
+
+    const teamLabel = (data.teamLabel || 'Ekip').trim();
+    if (teamLabel) html += '<p class="zara-side-label" style="font-size: 0.7rem; margin-bottom: 1.5rem;">' + escapeHtml(teamLabel) + '</p>';
+    const team = data.team || [];
+    if (team.length) {
+      html += '<div class="grid grid--3">';
+      team.forEach(function (member) {
+        const img = (member.image && member.image.trim()) ? '<img src="' + escapeHtml(member.image) + '" alt="' + escapeHtml(member.name || '') + '" loading="lazy" width="400" height="300">' : '';
+        html += '<div class="card"><div class="card__image">' + img + '</div><div class="card__content">';
+        html += '<h3>' + escapeHtml(member.name || '') + '</h3>';
+        html += '<p>' + escapeHtml(member.role || '') + '</p></div></div>';
+      });
+      html += '</div>';
+    }
+    container.innerHTML = html;
+  }
+
+  /**
    * Page-specific init (based on DOM elements)
    */
   function init() {
@@ -319,6 +361,16 @@
         else {
           var el = document.getElementById('services-content');
           if (el) el.innerHTML = '<p style="color: var(--color-grey);">Hizmetler yüklenemedi. data/services.json dosyasını kontrol edin.</p>';
+        }
+      });
+    }
+
+    if (document.getElementById('about-content')) {
+      fetchJSON('about.json').then(function (data) {
+        if (data) renderAbout('about-content', data);
+        else {
+          var el = document.getElementById('about-content');
+          if (el) el.innerHTML = '<p style="color: var(--color-grey);">Hakkımızda içeriği yüklenemedi. data/about.json dosyasını kontrol edin.</p>';
         }
       });
     }
@@ -377,6 +429,7 @@
     renderGallery: renderGallery,
     renderVideos: renderVideos,
     renderFeatured: renderFeatured,
-    renderServices: renderServices
+    renderServices: renderServices,
+    renderAbout: renderAbout
   };
 })();

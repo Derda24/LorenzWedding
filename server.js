@@ -244,7 +244,7 @@ function customerAuth(req, res, next) {
 }
 
 // ---------- Data API: serve JSON from Supabase Storage or static data/ ----------
-const ALLOWED_DATA_FILES = ['gallery.json', 'videos.json', 'featured.json', 'services.json'];
+const ALLOWED_DATA_FILES = ['gallery.json', 'videos.json', 'featured.json', 'services.json', 'about.json'];
 
 app.get('/api/data/:filename', function (req, res) {
   const filename = req.params.filename;
@@ -384,6 +384,9 @@ app.post('/api/save-featured', adminAuth, function (req, res) {
 });
 app.post('/api/save-services', adminAuth, function (req, res) {
   saveJsonToData('services.json', req.body, res);
+});
+app.post('/api/save-about', adminAuth, function (req, res) {
+  saveJsonToData('about.json', req.body, res);
 });
 
 // ---------- Customer auth ----------
