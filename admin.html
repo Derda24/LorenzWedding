@@ -162,7 +162,13 @@
       <form class="admin-form" id="featured-form">
         <div>
           <label for="hero-image">Hero arka plan görseli URL</label>
-          <input type="url" id="hero-image" placeholder="https://...">
+          <input type="text" id="hero-image" placeholder="https://... veya aşağıdan dosya seçin">
+        </div>
+        <div>
+          <label for="hero-file">Bilgisayardan fotoğraf seç</label>
+          <input type="file" id="hero-file" accept="image/*">
+          <p id="hero-file-name" style="font-size: 0.75rem; color: var(--color-grey); margin-top: 0.25rem;"></p>
+          <p style="font-size: 0.7rem; color: var(--color-grey); margin-top: 0.25rem;">Dosya seçince görsel sunucuya yüklenir ve URL otomatik dolar.</p>
         </div>
         <div>
           <label for="hero-title">Hero başlık</label>
@@ -652,6 +658,37 @@
           nameEl.textContent = file.name + ' (yerel)';
         };
         reader.readAsDataURL(file);
+      });
+    });
+
+    document.getElementById('hero-file').addEventListener('change', function () {
+      var file = this.files[0];
+      var nameEl = document.getElementById('hero-file-name');
+      var heroInput = document.getElementById('hero-image');
+      if (!file || !file.type.startsWith('image/')) {
+        nameEl.textContent = '';
+        return;
+      }
+      nameEl.textContent = file.name + ' – sıkıştırılıyor...';
+      compressImageForUpload(file).then(function (blob) {
+        nameEl.textContent = file.name + ' – yükleniyor...';
+        var secret = sessionStorage.getItem('adminSecret');
+        var fd = new FormData();
+        fd.append('image', blob, (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg');
+        var opts = { method: 'POST', body: fd };
+        if (secret) opts.headers = { 'X-Admin-Secret': secret };
+        return fetch('/api/admin/upload-hero-image', opts)
+          .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+          .then(function (result) {
+            if (result.ok && result.data && result.data.url) {
+              heroInput.value = result.data.url;
+              nameEl.textContent = file.name + ' ✓ URL alanı güncellendi.';
+            } else {
+              nameEl.textContent = (result.data && result.data.error) ? (file.name + ' – ' + result.data.error) : (file.name + ' – yükleme başarısız.');
+            }
+          });
+      }).catch(function () {
+        nameEl.textContent = file.name + ' – işlenemedi.';
       });
     });
 

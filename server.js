@@ -735,6 +735,37 @@ app.post('/api/admin/upload-gallery-image', adminAuth, upload.single('image'), a
   }
 });
 
+// Hero/featured image upload: Supabase (hero/...) or local (assets/images/hero/...)
+app.post('/api/admin/upload-hero-image', adminAuth, upload.single('image'), async function (req, res) {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'Görsel dosyası gerekli.' });
+    const f = req.file;
+    const fileBuffer = fs.readFileSync(f.path);
+    const contentType = f.mimetype || 'image/jpeg';
+    const safeName = (Date.now() + '-' + (f.originalname || 'image').replace(/[^a-zA-Z0-9._-]/g, '_')).replace(/\.[^.]+$/, '') + '.jpg';
+
+    if (storageSupabase && storageSupabase.isAvailable()) {
+      const storagePath = 'hero/' + safeName;
+      const uploadResult = await storageSupabase.uploadPhoto(storagePath, fileBuffer, contentType);
+      try { fs.unlinkSync(f.path); } catch (e) {}
+      if (!uploadResult.ok) return res.status(500).json({ error: uploadResult.error || 'Yükleme başarısız.' });
+      return res.json({ ok: true, url: uploadResult.url });
+    }
+
+    // Local: save to assets/images/hero/ so static server serves it
+    const heroDir = path.join(staticDir, 'assets', 'images', 'hero');
+    if (!fs.existsSync(heroDir)) fs.mkdirSync(heroDir, { recursive: true });
+    const destPath = path.join(heroDir, safeName);
+    fs.writeFileSync(destPath, fileBuffer);
+    try { fs.unlinkSync(f.path); } catch (e) {}
+    const relativeUrl = 'assets/images/hero/' + safeName;
+    res.json({ ok: true, url: relativeUrl });
+  } catch (err) {
+    console.error('[Upload] Hero image error:', err);
+    res.status(500).json({ error: 'Sunucu hatası: ' + err.message });
+  }
+});
+
 // Serve uploads directory (only if directory exists or can be created)
 try {
   const uploadsStaticDir = isVercelEnv ? path.join(__dirname, '..', 'uploads') : UPLOADS_DIR;
