@@ -1,21 +1,21 @@
 {
   "hero": {
-    "image": "https://images.unsplash.com/photo-1519741497674-611481863552?w=1920",
+    "image": "assets/images/hero/hero-1.jpg",
     "title": "Yeni"
   },
   "imageBlocks": [
     {
       "id": "1",
       "images": [
-        "https://images.unsplash.com/photo-1519741497674-611481863552?w=1200",
-        "https://images.unsplash.com/photo-1591604466107-ec97de577aff?w=1200"
+        "assets/images/hero/hero-2.jpg",
+        "assets/images/hero/hero-3.jpg"
       ]
     },
     {
       "id": "2",
       "images": [
-        "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=1200",
-        "https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=1200"
+        "assets/images/hero/hero-4.jpg",
+        "assets/images/hero/hero-5.jpg"
       ]
     }
   ],
