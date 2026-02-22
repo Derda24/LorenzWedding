@@ -1,7 +1,6 @@
 @echo off
-cd /d "%~dp0"
+cd /d "c:\Users\turlu\Lorenz Wedding"
 git add -A
-git status
-git commit -m "Update: featured data, index, and new images" 2>nul || echo Nothing to commit or already committed.
+git commit -m "Add hero image upload from computer; update push script"
 git push origin main
 pause

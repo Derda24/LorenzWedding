@@ -174,6 +174,50 @@
           <label for="hero-title">Hero başlık</label>
           <input type="text" id="hero-title" placeholder="Yeni">
         </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-stone);">
+          <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Altındaki 4 fotoğraf</h3>
+          <p style="font-size: 0.8rem; color: var(--color-grey); margin-bottom: 1rem;">Ana sayfada hero’nun altında soldan sağa görünen 4 fotoğraf. URL girin veya bilgisayardan dosya seçin.</p>
+          <div class="admin-form" style="display: grid; gap: 1rem;">
+            <div class="featured-photo-row" style="display: grid; grid-template-columns: 80px 1fr auto; gap: 0.5rem; align-items: start;">
+              <label for="featured-photo-1" style="padding-top: 0.6rem;">Fotoğraf 1</label>
+              <div>
+                <input type="text" id="featured-photo-1" placeholder="URL veya dosya seçin" style="width: 100%; margin-bottom: 0.25rem;">
+                <input type="file" id="featured-file-1" accept="image/*" class="featured-file" data-slot="1" style="font-size: 0.8rem;">
+                <p id="featured-file-name-1" style="font-size: 0.75rem; color: var(--color-grey); margin-top: 0.25rem;"></p>
+              </div>
+              <img id="featured-preview-1" src="" alt="" style="width: 48px; height: 36px; object-fit: cover; border: 1px solid var(--color-stone); display: none;">
+            </div>
+            <div class="featured-photo-row" style="display: grid; grid-template-columns: 80px 1fr auto; gap: 0.5rem; align-items: start;">
+              <label for="featured-photo-2" style="padding-top: 0.6rem;">Fotoğraf 2</label>
+              <div>
+                <input type="text" id="featured-photo-2" placeholder="URL veya dosya seçin" style="width: 100%; margin-bottom: 0.25rem;">
+                <input type="file" id="featured-file-2" accept="image/*" class="featured-file" data-slot="2" style="font-size: 0.8rem;">
+                <p id="featured-file-name-2" style="font-size: 0.75rem; color: var(--color-grey); margin-top: 0.25rem;"></p>
+              </div>
+              <img id="featured-preview-2" src="" alt="" style="width: 48px; height: 36px; object-fit: cover; border: 1px solid var(--color-stone); display: none;">
+            </div>
+            <div class="featured-photo-row" style="display: grid; grid-template-columns: 80px 1fr auto; gap: 0.5rem; align-items: start;">
+              <label for="featured-photo-3" style="padding-top: 0.6rem;">Fotoğraf 3</label>
+              <div>
+                <input type="text" id="featured-photo-3" placeholder="URL veya dosya seçin" style="width: 100%; margin-bottom: 0.25rem;">
+                <input type="file" id="featured-file-3" accept="image/*" class="featured-file" data-slot="3" style="font-size: 0.8rem;">
+                <p id="featured-file-name-3" style="font-size: 0.75rem; color: var(--color-grey); margin-top: 0.25rem;"></p>
+              </div>
+              <img id="featured-preview-3" src="" alt="" style="width: 48px; height: 36px; object-fit: cover; border: 1px solid var(--color-stone); display: none;">
+            </div>
+            <div class="featured-photo-row" style="display: grid; grid-template-columns: 80px 1fr auto; gap: 0.5rem; align-items: start;">
+              <label for="featured-photo-4" style="padding-top: 0.6rem;">Fotoğraf 4</label>
+              <div>
+                <input type="text" id="featured-photo-4" placeholder="URL veya dosya seçin" style="width: 100%; margin-bottom: 0.25rem;">
+                <input type="file" id="featured-file-4" accept="image/*" class="featured-file" data-slot="4" style="font-size: 0.8rem;">
+                <p id="featured-file-name-4" style="font-size: 0.75rem; color: var(--color-grey); margin-top: 0.25rem;"></p>
+              </div>
+              <img id="featured-preview-4" src="" alt="" style="width: 48px; height: 36px; object-fit: cover; border: 1px solid var(--color-stone); display: none;">
+            </div>
+          </div>
+        </div>
+
         <button type="submit" class="btn btn--accent">Güncelle</button>
       </form>
       <div class="admin-actions">
@@ -378,6 +422,18 @@
           var h = featuredData.hero || {};
           document.getElementById('hero-image').value = h.image || '';
           document.getElementById('hero-title').value = h.title || '';
+          var blocks = featuredData.imageBlocks || [];
+          var urls = [
+            (blocks[0] && blocks[0].images && blocks[0].images[0]) || '',
+            (blocks[0] && blocks[0].images && blocks[0].images[1]) || '',
+            (blocks[1] && blocks[1].images && blocks[1].images[0]) || '',
+            (blocks[1] && blocks[1].images && blocks[1].images[1]) || ''
+          ];
+          for (var i = 1; i <= 4; i++) {
+            var el = document.getElementById('featured-photo-' + i);
+            if (el) el.value = urls[i - 1] || '';
+            updateFeaturedPreview(i);
+          }
         });
 
       fetch('/api/data/services.json')
@@ -733,13 +789,81 @@
       showMessage('Video eklendi.');
     });
 
+    function getFeaturedImageBlocksFromForm() {
+      var urls = [
+        document.getElementById('featured-photo-1').value.trim(),
+        document.getElementById('featured-photo-2').value.trim(),
+        document.getElementById('featured-photo-3').value.trim(),
+        document.getElementById('featured-photo-4').value.trim()
+      ];
+      return [
+        { id: '1', images: [urls[0] || '', urls[1] || ''] },
+        { id: '2', images: [urls[2] || '', urls[3] || ''] }
+      ];
+    }
+
+    function updateFeaturedPreview(slot) {
+      var input = document.getElementById('featured-photo-' + slot);
+      var preview = document.getElementById('featured-preview-' + slot);
+      if (!input || !preview) return;
+      var url = (input.value || '').trim();
+      if (url) {
+        preview.src = url;
+        preview.style.display = 'block';
+        preview.onerror = function () { preview.style.display = 'none'; };
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    }
+
     document.getElementById('featured-form').addEventListener('submit', function (e) {
       e.preventDefault();
       featuredData.hero = {
         image: document.getElementById('hero-image').value,
         title: document.getElementById('hero-title').value || 'Yeni'
       };
-      showMessage('Ana sayfa ayarları güncellendi. featured.json indirip data/ klasörüne koyun.');
+      featuredData.imageBlocks = getFeaturedImageBlocksFromForm();
+      showMessage('Ana sayfa ayarları güncellendi. Siteye kaydet veya featured.json indir.');
+    });
+
+    [1, 2, 3, 4].forEach(function (slot) {
+      var input = document.getElementById('featured-photo-' + slot);
+      if (input) input.addEventListener('input', function () { updateFeaturedPreview(slot); });
+    });
+
+    document.querySelectorAll('.featured-file').forEach(function (fileInput) {
+      fileInput.addEventListener('change', function () {
+        var slot = this.getAttribute('data-slot');
+        var file = this.files[0];
+        var nameEl = document.getElementById('featured-file-name-' + slot);
+        var urlInput = document.getElementById('featured-photo-' + slot);
+        if (!file || !file.type.startsWith('image/')) {
+          if (nameEl) nameEl.textContent = '';
+          return;
+        }
+        if (nameEl) nameEl.textContent = file.name + ' – yükleniyor...';
+        compressImageForUpload(file).then(function (blob) {
+          var secret = sessionStorage.getItem('adminSecret');
+          var fd = new FormData();
+          fd.append('image', blob, (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg');
+          var opts = { method: 'POST', body: fd };
+          if (secret) opts.headers = { 'X-Admin-Secret': secret };
+          return fetch('/api/admin/upload-hero-image', opts)
+            .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+            .then(function (result) {
+              if (result.ok && result.data && result.data.url) {
+                urlInput.value = result.data.url;
+                updateFeaturedPreview(slot);
+                if (nameEl) nameEl.textContent = file.name + ' ✓';
+              } else {
+                if (nameEl) nameEl.textContent = (result.data && result.data.error) ? result.data.error : 'Yükleme başarısız.';
+              }
+            });
+        }).catch(function () {
+          if (nameEl) nameEl.textContent = file.name + ' – işlenemedi.';
+        });
+      });
     });
 
     function saveToSite(apiPath, data, label) {
@@ -843,6 +967,7 @@
         image: document.getElementById('hero-image').value || '',
         title: document.getElementById('hero-title').value || 'Yeni'
       };
+      featuredData.imageBlocks = getFeaturedImageBlocksFromForm();
       saveToSite('/api/save-featured', featuredData, 'Ana sayfa');
     });
 
@@ -881,6 +1006,11 @@
     });
 
     document.getElementById('export-featured').addEventListener('click', function () {
+      featuredData.hero = {
+        image: document.getElementById('hero-image').value || '',
+        title: document.getElementById('hero-title').value || 'Yeni'
+      };
+      featuredData.imageBlocks = getFeaturedImageBlocksFromForm();
       downloadJSON('featured.json', featuredData);
       showMessage('featured.json indirildi. data/ klasörüne koyup yeniden yayınlayın.');
     });

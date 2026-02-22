@@ -201,14 +201,14 @@
       const blocks = featuredData.imageBlocks
         .map(function (block) {
           const imgs = (block.images || [])
+            .filter(function (src) { return typeof src === 'string' && src.trim(); })
             .map(function (src) {
-              return typeof src === 'string'
-                ? '<img src="' + escapeHtml(src) + '" alt="">'
-                : '';
+              return '<img src="' + escapeHtml(src.trim()) + '" alt="">';
             })
             .join('');
           return '<section class="zara-image-block">' + imgs + '</section>';
         })
+        .filter(function (html) { return html.indexOf('<img') !== -1; })
         .join('');
 
       container.innerHTML = blocks;
