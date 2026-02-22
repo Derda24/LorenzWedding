@@ -257,7 +257,7 @@
           <input type="text" id="about-team-label" placeholder="Ekip">
         </div>
         <div style="padding: 1rem; border: 1px solid var(--color-stone); background: var(--color-cream, #fafafa);">
-          <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;">Ekip üyeleri (3 kişi)</h3>
+          <h3 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;">Ekip üyeleri (4 kişi)</h3>
           <div class="admin-form">
             <div class="services-card" style="margin-bottom: 1rem;">
               <div class="services-card__row full"><label>1. İsim</label><input type="text" id="about-team1-name" placeholder="Ahmet Yılmaz"></div>
@@ -271,11 +271,17 @@
               <div class="services-card__row full"><label>2. Görsel URL</label><input type="text" id="about-team2-image" placeholder="URL veya dosya seçin"></div>
               <div><label>2. Dosya seç</label><input type="file" id="about-team2-file" accept="image/*" data-team="2"><p id="about-team2-file-name" style="font-size: 0.75rem; color: var(--color-grey);"></p></div>
             </div>
-            <div class="services-card">
+            <div class="services-card" style="margin-bottom: 1rem;">
               <div class="services-card__row full"><label>3. İsim</label><input type="text" id="about-team3-name" placeholder="Mehmet Demir"></div>
               <div class="services-card__row full"><label>3. Ünvan</label><input type="text" id="about-team3-role" placeholder="Organizasyon Koordinatörü"></div>
               <div class="services-card__row full"><label>3. Görsel URL</label><input type="text" id="about-team3-image" placeholder="URL veya dosya seçin"></div>
               <div><label>3. Dosya seç</label><input type="file" id="about-team3-file" accept="image/*" data-team="3"><p id="about-team3-file-name" style="font-size: 0.75rem; color: var(--color-grey);"></p></div>
+            </div>
+            <div class="services-card">
+              <div class="services-card__row full"><label>4. İsim</label><input type="text" id="about-team4-name" placeholder="Dördüncü üye"></div>
+              <div class="services-card__row full"><label>4. Ünvan</label><input type="text" id="about-team4-role" placeholder="Ünvan"></div>
+              <div class="services-card__row full"><label>4. Görsel URL</label><input type="text" id="about-team4-image" placeholder="URL veya dosya seçin"></div>
+              <div><label>4. Dosya seç</label><input type="file" id="about-team4-file" accept="image/*" data-team="4"><p id="about-team4-file-name" style="font-size: 0.75rem; color: var(--color-grey);"></p></div>
             </div>
           </div>
         </div>
@@ -523,7 +529,7 @@
       document.getElementById('about-intro-image').value = intro.image || '';
       document.getElementById('about-team-label').value = d.teamLabel || 'Ekip';
       var team = d.team || [];
-      for (var i = 1; i <= 3; i++) {
+      for (var i = 1; i <= 4; i++) {
         var m = team[i - 1] || {};
         var elName = document.getElementById('about-team' + i + '-name');
         var elRole = document.getElementById('about-team' + i + '-role');
@@ -536,7 +542,7 @@
 
     function getAboutFromForm() {
       var team = [];
-      for (var i = 1; i <= 3; i++) {
+      for (var i = 1; i <= 4; i++) {
         team.push({
           name: (document.getElementById('about-team' + i + '-name') || {}).value || '',
           role: (document.getElementById('about-team' + i + '-role') || {}).value || '',
@@ -1017,7 +1023,7 @@
       var file = this.files[0];
       uploadImageThenSetInput(file, 'about-intro-image', 'about-intro-file-name');
     });
-    [1, 2, 3].forEach(function (i) {
+    [1, 2, 3, 4].forEach(function (i) {
       document.getElementById('about-team' + i + '-file').addEventListener('change', function () {
         var file = this.files[0];
         uploadImageThenSetInput(file, 'about-team' + i + '-image', 'about-team' + i + '-file-name');
